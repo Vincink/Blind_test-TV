@@ -25,7 +25,6 @@
             overflow: hidden;
         }
 
-        /* Écrans (états) */
         .screen {
             width: 100%;
             max-width: 400px;
@@ -40,7 +39,6 @@
             display: none !important;
         }
 
-        /* 1. Écran de Connexion */
         .login-card {
             width: 100%;
             background: rgba(255, 255, 255, 0.05);
@@ -94,7 +92,6 @@
             transform: scale(0.98);
         }
 
-        /* 2. Salle d'attente */
         .waiting-screen {
             text-align: center;
         }
@@ -114,7 +111,6 @@
             100% { transform: rotate(360deg); }
         }
 
-        /* 3. Écran de jeu (QCM 4 gros boutons) */
         .game-screen {
             justify-content: space-between;
             padding: 20px 0;
@@ -146,7 +142,6 @@
             justify-content: center;
         }
 
-        /* Les 4 gros boutons colorés inspirés du visuel validé */
         .choice-btn {
             width: 100%;
             min-height: 85px;
@@ -175,7 +170,6 @@
             filter: grayscale(50%);
         }
 
-        /* Couleurs des 4 boutons du QCM */
         .btn-pink { background: linear-gradient(135deg, #ff007f, #d60068); }
         .btn-orange { background: linear-gradient(135deg, #ff7b00, #e06c00); }
         .btn-yellow { background: linear-gradient(135deg, #ffd700, #cca300); color: #0b0f19; }
@@ -191,7 +185,6 @@
 </head>
 <body>
 
-    <!-- ÉCRAN 1 : CONNEXION -->
     <div id="screen-login" class="screen">
         <div class="login-card">
             <h2>Rejoindre le Blind Test</h2>
@@ -200,7 +193,6 @@
         </div>
     </div>
 
-    <!-- ÉCRAN 2 : SALLE D'ATTENTE -->
     <div id="screen-waiting" class="screen hidden">
         <div class="waiting-screen">
             <div class="waiting-spinner"></div>
@@ -209,7 +201,6 @@
         </div>
     </div>
 
-    <!-- ÉCRAN 3 : JEU / QCM -->
     <div id="screen-game" class="screen game-screen hidden">
         <div class="game-header">
             <p>Sélectionne la bonne réponse</p>
@@ -228,26 +219,24 @@
         </div>
     </div>
 
-    <!-- SDK Firebase (Modular) -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getDatabase, ref, set, update, onValue } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
-        // CONFIGURATION FIREBASE (Mets ici exactement les mêmes clés que sur ta page TV)
         const firebaseConfig = {
-            apiKey: "TON_API_KEY",
-            authDomain: "ton-projet.firebaseapp.com",
-            databaseURL: "https://ton-projet-default-rtdb.europe-west1.firebasedatabase.app",
-            projectId: "ton-projet",
-            storageBucket: "ton-projet.appspot.com",
-            messagingSenderId: "123456789",
-            appId: "1:1234:web:abcd"
+            apiKey: "AIzaSyC009nu3gKCkZczF_7w5Iqf9aUMd-TRsBM",
+            authDomain: "blindtest-tv.firebaseapp.com",
+            databaseURL: "https://blindtest-tv-default-rtdb.europe-west1.firebasedatabase.app",
+            projectId: "blindtest-tv",
+            storageBucket: "blindtest-tv.firebasestorage.app",
+            messagingSenderId: "879373587888",
+            appId: "1:879373587888:web:df8c99cb8aed5b7acb7275",
+            measurementId: "G-J090BQQYZB"
         };
 
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
 
-        // Palette des 10 couleurs arc-en-ciel uniques définies pour les joueurs
         const rainbowColors = [
             "#FF0055", "#FF5500", "#FFAA00", "#00CC66", "#00CCCC", 
             "#0066FF", "#7B00FF", "#FF00AA", "#55FF00", "#00FFCC"
@@ -264,7 +253,6 @@
                 return;
             }
 
-            // Enregistrer le joueur dans Firebase avec un score de 0 et pastille assombrie (answered: false)
             set(ref(db, 'players/' + playerId), {
                 name: pseudo,
                 score: 0,
@@ -272,32 +260,26 @@
                 answered: false,
                 avatar: "https://i.pravatar.cc/150?img=" + Math.floor(Math.random() * 70)
             }).then(() => {
-                // Basculer vers l'écran d'attente
                 document.getElementById('screen-login').classList.add('hidden');
                 document.getElementById('screen-waiting').classList.remove('hidden');
                 document.getElementById('welcome-msg').textContent = `Bienvenue, ${pseudo} !`;
             });
         };
 
-        // Écouter l'état du jeu depuis Firebase pour basculer automatiquement en mode QCM si la partie démarre
         const gameStateRef = ref(db, 'gameState');
         onValue(gameStateRef, (snapshot) => {
             const state = snapshot.val();
             if (state && state.status === 'playing') {
-                // Afficher l'écran de jeu mobile
                 document.getElementById('screen-waiting').classList.add('hidden');
                 document.getElementById('screen-game').classList.remove('hidden');
                 
-                // Réinitialiser l'état de réponse pour la nouvelle manche
                 hasAnsweredCurrentRound = false;
                 document.getElementById('answer-feedback').textContent = "Choisis vite !";
                 
-                // Activer à nouveau les boutons
                 for (let i = 0; i < 4; i++) {
                     document.getElementById(`choice-${i}`).disabled = false;
                 }
 
-                // Charger les choix du QCM s'ils existent dans l'état
                 if (state.choices) {
                     for (let i = 0; i < 4; i++) {
                         document.getElementById(`choice-${i}`).textContent = state.choices[i];
@@ -306,20 +288,16 @@
             }
         });
 
-        // Fonction pour envoyer la réponse du joueur
         window.sendAnswer = function(choiceIndex) {
             if (hasAnsweredCurrentRound) return;
             hasAnsweredCurrentRound = true;
 
-            // Désactiver tous les boutons pour empêcher de re-cliquer
             for (let i = 0; i < 4; i++) {
                 document.getElementById(`choice-${i}`).disabled = true;
             }
 
             document.getElementById('answer-feedback').textContent = "Réponse enregistrée ! En attente des autres...";
 
-            // Mettre à jour le statut du joueur dans Firebase (answered = true pour illuminer sa pastille sur la TV)
-            // Note: Le calcul des points se fera selon le timing de réception de la réponse
             update(ref(db, 'players/' + playerId), {
                 answered: true,
                 lastChoice: choiceIndex,
