@@ -306,7 +306,7 @@
     <header>
         <h1>Blind Test Chanson Française</h1>
         <div class="controls">
-            <button class="btn" id="start-btn" onclick="startCountdown()">Lancer la partie</button>
+            <button class="btn" id="start-btn" onclick="startлегаLancement()">Lancer la partie</button>
         </div>
     </header>
 
@@ -363,7 +363,8 @@
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
 
-        const mobileUrl = window.location.origin + "/mobile.html"; 
+        // MODIFICATION APPORTÉE ICI : Génération robuste de l'URL mobile incluant le sous-dossier GitHub Pages
+        const mobileUrl = window.location.href.substring(0, window.location.href.lastIndexOf('/') + 1) + "mobile.html"; 
         
         document.getElementById('qr-code-box').innerHTML = `
             <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(mobileUrl)}" alt="QR Code Mobile">
@@ -424,6 +425,10 @@
                     'start': 45
                 }
             });
+        }
+
+        function startлегаLancement() {
+            startCountdown();
         }
 
         function startCountdown() {
