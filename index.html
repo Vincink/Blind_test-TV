@@ -306,7 +306,7 @@
     <header>
         <h1>Blind Test Chanson Française</h1>
         <div class="controls">
-            <button class="btn" id="start-btn" onclick="startCountdown()">Lancer la partie</button>
+            <button class="btn" id="start-btn" onclick="startButtonClicked()">Lancer la partie</button>
         </div>
     </header>
 
@@ -363,7 +363,11 @@
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
 
-        // URL EN DUR EXACTE pour forcer le bon lien sans erreur 404
+        // Rendre 'db' et 'ref'/'set' accessibles globalement pour le lancement
+        window.dbRef = db;
+        window.firebaseRef = ref;
+        window.firebaseSet = set;
+
         const mobileUrl = "https://vincink.github.io/Blind_test-TV/mobile.html"; 
         
         document.getElementById('qr-code-box').innerHTML = `
@@ -425,6 +429,24 @@
                     'start': 45
                 }
             });
+        }
+
+        function startButtonClicked() {
+            // 1. Déverrouiller l'audio YouTube et informer Firebase que la partie commence
+            if (playerYT && playerYT.playVideo) {
+                playerYT.playVideo();
+                playerYT.stopVideo(); // Stop immédiat pour préparer la lecture propre au compte à rebours
+            }
+
+            // 2. Mettre à jour l'état dans Firebase pour réveiller les smartphones
+            if (window.dbRef && window.firebaseRef && window.firebaseSet) {
+                window.firebaseSet(window.firebaseRef(window.dbRef, 'gameState'), {
+                    status: 'playing',
+                    choices: ["Artiste 1 - Titre A", "Artiste 2 - Titre B", "Artiste 3 - Titre C", "Artiste 4 - Titre D"]
+                });
+            }
+
+            startCountdown();
         }
 
         function startCountdown() {
