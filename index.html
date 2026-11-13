@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Blind Test - TV Board</title>
+    <title>Blind Test - TV Board (Firebase)</title>
     <style>
         * {
             box-sizing: border-box;
@@ -21,7 +21,6 @@
             flex-direction: column;
         }
 
-        /* En-tête */
         header {
             padding: 20px 40px;
             display: flex;
@@ -59,7 +58,6 @@
             transform: scale(1.02);
         }
 
-        /* Contenu Principal en 3 zones */
         main {
             flex: 1;
             display: grid;
@@ -69,7 +67,7 @@
             position: relative;
         }
 
-        /* Zone Gauche : QR Code & Lobby info */
+        /* Zone Gauche : QR Code */
         .left-zone {
             background: rgba(255, 255, 255, 0.03);
             border: 1px solid rgba(255, 255, 255, 0.08);
@@ -82,7 +80,6 @@
             transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
-        /* État réduit en bas à gauche pendant la partie */
         .left-zone.minimized {
             position: absolute;
             bottom: 30px;
@@ -121,7 +118,6 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            transition: all 0.5s ease;
         }
 
         .qr-box img {
@@ -137,7 +133,7 @@
             line-height: 1.4;
         }
 
-        /* Zone Centrale : Visuel / Vinyle / Compte à rebours / Lecteur */
+        /* Zone Centrale : Vinyle et compte à rebours */
         .center-zone {
             display: flex;
             flex-direction: column;
@@ -191,7 +187,6 @@
             100% { transform: rotate(360deg); }
         }
 
-        /* Overlay d'affichage central (Compte à rebours ou Question) */
         .game-status-display {
             text-align: center;
         }
@@ -209,12 +204,11 @@
             text-shadow: 0 0 20px rgba(255, 0, 127, 0.4);
         }
 
-        /* Lecteur YouTube masqué proprement */
         #youtube-player-container {
             display: none;
         }
 
-        /* Zone Droite : Lobby / Classement dynamique des joueurs */
+        /* Zone Droite : Classement dynamique */
         .right-zone {
             background: rgba(255, 255, 255, 0.03);
             border: 1px solid rgba(255, 255, 255, 0.08);
@@ -254,7 +248,6 @@
             padding-right: 5px;
         }
 
-        /* Style d'une pastille de joueur */
         .player-pill {
             display: flex;
             align-items: center;
@@ -262,17 +255,14 @@
             border-radius: 12px;
             background: rgba(255, 255, 255, 0.05);
             transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-            position: relative;
             border-left: 6px solid #ccc;
         }
 
-        /* État assombri (tant qu'il n'a pas répondu) */
         .player-pill.waiting {
             opacity: 0.4;
             filter: grayscale(40%);
         }
 
-        /* État normal (dès qu'il a répondu) */
         .player-pill.answered {
             opacity: 1;
             filter: none;
@@ -324,17 +314,14 @@
     </header>
 
     <main>
-        <!-- Zone Gauche : QR Code -->
         <div class="left-zone" id="qr-container">
             <div class="qr-title">Rejoindre le jeu</div>
-            <div class="qr-box">
-                <!-- Simulation visuelle d'un QR code -->
-                <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=https://github.io" alt="QR Code">
+            <div class="qr-box" id="qr-code-box">
+                <!-- Le QR code dynamique sera généré ici -->
             </div>
             <div class="qr-instructions">Scanne avec ton smartphone<br>pour jouer !</div>
         </div>
 
-        <!-- Zone Centrale : Animation & Compteur -->
         <div class="center-zone">
             <div class="vinyl-container">
                 <div class="vinyl" id="vinyl-disc">
@@ -347,93 +334,115 @@
                 <div class="big-counter" id="big-counter">--</div>
             </div>
 
-            <!-- Lecteur YouTube intégré (Source: evOJ-Lh6gMs) -->
             <div id="youtube-player-container">
                 <div id="yt-player"></div>
             </div>
         </div>
 
-        <!-- Zone Droite : Classement dynamique des joueurs -->
         <div class="right-zone">
             <div class="players-header">
                 <h2>Joueurs connectés</h2>
                 <span class="players-count" id="player-count">0</span>
             </div>
             <div class="players-list" id="players-list">
-                <!-- Les joueurs s'ajouteront dynamiquement ici -->
+                <!-- Les vrais joueurs connectés via Firebase s'afficheront ici -->
             </div>
         </div>
     </main>
 
     <!-- Script YouTube IFrame API -->
     <script src="https://www.youtube.com/iframe_api"></script>
-    <script>
-        // Palette des 10 couleurs arc-en-ciel uniques et vibrantes
-        const rainbowColors = [
-            "#FF0055", "#FF5500", "#FFAA00", "#00CC66", "#00CCCC", 
-            "#0066FF", "#7B00FF", "#FF00AA", "#55FF00", "#00FFCC"
-        ];
+    
+    <!-- SDK Firebase (Modular) -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getDatabase, ref, onValue, set, update } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
-        // Exemple de données fictives de joueurs pour tester le rendu visuel
-        let players = [
-            { id: 1, name: "Thomas", score: 45, color: rainbowColors[0], answered: true, avatar: "https://i.pravatar.cc/150?img=1" },
-            { id: 2, name: "Sarah", score: 38, color: rainbowColors[1], answered: false, avatar: "https://i.pravatar.cc/150?img=5" },
-            { id: 3, name: "Lucas", score: 30, color: rainbowColors[2], answered: true, avatar: "https://i.pravatar.cc/150?img=3" },
-            { id: 4, name: "Julie", score: 25, color: rainbowColors[3], answered: false, avatar: "https://i.pravatar.cc/150?img=9" }
-        ];
+        // CONFIGURATION FIREBASE (À remplacer par tes propres clés de projet Firebase gratuites)
+        const firebaseConfig = {
+            apiKey: "TON_API_KEY",
+            authDomain: "ton-projet.firebaseapp.com",
+            databaseURL: "https://ton-projet-default-rtdb.europe-west1.firebasedatabase.app",
+            projectId: "ton-projet",
+            storageBucket: "ton-projet.appspot.com",
+            messagingSenderId: "123456789",
+            appId: "1:1234:web:abcd"
+        };
 
-        function renderPlayers() {
-            // Trier les joueurs par score décroissant pour le classement dynamique
-            players.sort((a, b) => b.score - a.score);
-            
+        // Initialisation de Firebase
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+
+        // Générer l'URL de la page mobile (par exemple ton lien GitHub Pages mobile)
+        const mobileUrl = window.location.origin + "/mobile.html"; 
+        
+        // Affichage dynamique du QR code pointant vers le mobile
+        document.getElementById('qr-code-box').innerHTML = `
+            <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(mobileUrl)}" alt="QR Code Mobile">
+        `;
+
+        // Écoute en temps réel des joueurs connectés dans Firebase
+        const playersRef = ref(db, 'players');
+        onValue(playersRef, (snapshot) => {
+            const data = snapshot.val();
             const listContainer = document.getElementById('players-list');
             listContainer.innerHTML = '';
-            
-            document.getElementById('player-count').textContent = players.length;
 
-            players.forEach((player, index) => {
+            if (!data) {
+                document.getElementById('player-count').textContent = '0';
+                listContainer.innerHTML = '<div style="color: #a0aec0; text-align: center; margin-top: 20px;">En attente de connexions...</div>';
+                return;
+            }
+
+            // Transformer l'objet Firebase en tableau de joueurs
+            let playersArray = Object.keys(data).map(key => ({
+                id: key,
+                ...data[key]
+            }));
+
+            // Trier par score décroissant (Classement dynamique en direct)
+            playersArray.sort((a, b) => b.score - a.score);
+            document.getElementById('player-count').textContent = playersArray.length;
+
+            playersArray.forEach((player, index) => {
                 const pill = document.createElement('div');
-                // Si le joueur n'a pas répondu, on applique la classe .waiting (assombri)
-                // Sinon .apres/normal .answered
                 const statusClass = player.answered ? 'answered' : 'waiting';
                 
                 pill.className = `player-pill ${statusClass}`;
-                pill.style.borderColor = player.color;
+                pill.style.borderColor = player.color || '#7928ca';
                 if(player.answered) {
-                    pill.style.color = player.color;
+                    pill.style.color = player.color || '#fff';
                 }
 
                 pill.innerHTML = `
                     <div class="player-rank">#${index + 1}</div>
-                    <div class="player-avatar" style="background-image: url('${player.avatar}')"></div>
+                    <div class="player-avatar" style="background-image: url('${player.avatar || "https://i.pravatar.cc/150?img=1"}')"></div>
                     <div class="player-info">
                         <span class="player-name" style="color: ${player.answered ? '#fff' : '#a0aec0'}">${player.name}</span>
-                        <span class="player-score">${player.score} pts</span>
+                        <span class="player-score">${player.score || 0} pts</span>
                     </div>
                 `;
                 listContainer.appendChild(pill);
             });
-        }
+        });
+    </script>
 
-        // Initialisation de l'affichage des joueurs au démarrage
-        renderPlayers();
-
-        // Gestionnaire du lancement de partie (Compte à rebours 5s puis musique)
+    <script>
+        // Gestionnaire YouTube et Compte à rebours de la partie
         let playerYT;
         function onYouTubeIframeAPIReady() {
             playerYT = new YT.Player('yt-player', {
                 height: '0',
                 width: '0',
-                videoId: 'evOJ-Lh6gMs', // Identifiant validé
+                videoId: 'evOJ-Lh6gMs', // Identifiant validé Chanson Française
                 playerVars: {
                     'autoplay': 0,
-                    'start': 45 // Exemple de départ au milieu d'un refrain
+                    'start': 45
                 }
             });
         }
 
         function startCountdown() {
-            // 1. Réduire le QR code en bas à gauche
             document.getElementById('qr-container').classList.add('minimized');
             document.getElementById('start-btn').style.display = 'none';
             
@@ -455,15 +464,12 @@
             document.getElementById('status-label').textContent = "Écoutez bien l'extrait ! (15s)";
             document.getElementById('big-counter').textContent = "15";
             
-            // Lancer la lecture audio YouTube
             if (playerYT && playerYT.playVideo) {
                 playerYT.playVideo();
             }
             
-            // Activer l'animation du vinyle
             document.getElementById('vinyl-disc').classList.add('playing');
 
-            // Lancer le compteur de l'extrait de 15 secondes
             let musicTimeLeft = 15;
             const musicInterval = setInterval(() => {
                 musicTimeLeft--;
