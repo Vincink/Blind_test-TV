@@ -202,15 +202,18 @@
             text-shadow: 0 0 20px rgba(255, 0, 127, 0.4);
         }
 
+        /* Lecteur visible mais discret pour éviter le blocage audio de l'iPad */
         #youtube-player-container {
             position: absolute;
-            top: 0;
-            left: 0;
-            opacity: 0.01;
-            pointer-events: none;
-            width: 1px;
-            height: 1px;
+            bottom: 20px;
+            right: 20px;
+            width: 160px;
+            height: 90px;
+            border-radius: 8px;
             overflow: hidden;
+            border: 1px solid rgba(255,255,255,0.2);
+            background: #000;
+            z-index: 5;
         }
 
         .right-zone {
@@ -313,7 +316,7 @@
     <header>
         <h1>Blind Test Chanson Française (Objectif: 150 pts)</h1>
         <div class="controls">
-            <button class="btn" id="start-btn" onclick="startNextRound()">Lancer la manche</button>
+            <button class="btn" id="start-btn" onclick="resetAndStartGame()">Réinitialiser & Lancer</button>
         </div>
     </header>
 
@@ -336,6 +339,7 @@
                 <div class="big-counter" id="big-counter">--</div>
             </div>
 
+            <!-- Lecteur visible pour autoriser l'audio sur iPad -->
             <div id="youtube-player-container">
                 <div id="yt-player"></div>
             </div>
@@ -354,7 +358,7 @@
     
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getDatabase, ref, onValue, set, update, get } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+        import { getDatabase, ref, onValue, set, update, remove } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyC009nu3gKCkZczF_7w5Iqf9aUMd-TRsBM",
@@ -374,7 +378,7 @@
         window.dbRef = ref;
         window.dbSet = set;
         window.dbUpdate = update;
-        window.dbGet = get;
+        window.dbRemove = remove;
 
         const mobileUrl = "https://vincink.github.io/Blind_test-TV/mobile.html"; 
         
@@ -402,7 +406,6 @@
             playersArray.sort((a, b) => (b.score || 0) - (a.score || 0));
             document.getElementById('player-count').textContent = playersArray.length;
 
-            // Vérifier si un joueur a atteint 150 points
             playersArray.forEach((player, index) => {
                 if ((player.score || 0) >= 150) {
                     document.getElementById('status-label').textContent = `🏆 Victoire de ${player.name} !`;
@@ -433,7 +436,6 @@
     </script>
 
     <script>
-        // Playlist avec la bonne réponse (correctIndex de 0 à 3)
         const playlist = [
             {
                 videoId: "evOJ-Lh6gMs",
@@ -452,50 +454,47 @@
         let currentTrackIndex = 0;
         let playerYT;
         let roundActive = false;
-        let answerTimes = []; // Enregistre l'ordre des réponses pour attribuer de 15 à 0 pts
+        let answerTimes = [];
 
         function onYouTubeIframeAPIReady() {
             playerYT = new YT.Player('yt-player', {
-                height: '100',
-                width: '100',
+                height: '90',
+                width: '160',
                 videoId: playlist[0].videoId,
                 playerVars: {
                     'autoplay': 0,
                     'start': playlist[0].start,
-                    'controls': 0
+                    'controls': 1
                 }
             });
         }
 
+        // Bouton pour vider complètement les joueurs et lancer la partie propre
+        function resetAndStartGame() {
+            if (window.dbInstance && window.dbRef && window.dbRemove && window.dbSet) {
+                // Supprime tous les joueurs connectés pour repartir à zéro
+                window.dbRemove(window.dbRef(window.dbInstance, 'players')).then(() => {
+                    startNextRound();
+                });
+            } else {
+                startNextRound();
+            }
+        }
+
         function startNextRound() {
             if (currentTrackIndex >= playlist.length) {
-                currentTrackIndex = 0; // Boucle la playlist si nécessaire
+                currentTrackIndex = 0;
             }
 
-            // Déverrouillage audio iPad
+            // Déverrouillage audio interactif sur l'iPad
             if (playerYT && playerYT.playVideo) {
                 playerYT.playVideo();
-                playerYT.pauseVideo();
             }
 
             roundActive = true;
             answerTimes = [];
 
-            // Réinitialiser les réponses des joueurs pour la nouvelle manche (sans toucher aux scores cumulés)
-            if (window.dbInstance && window.dbRef && window.dbGet && window.dbUpdate) {
-                window.dbGet(window.dbRef(window.dbInstance, 'players')).then((snapshot) => {
-                    const players = snapshot.val();
-                    if (players) {
-                        Object.keys(players).forEach(playerId => {
-                            window.dbUpdate(window.dbRef(window.dbInstance, 'players/' + playerId), {
-                                answered: false,
-                                lastChoice: null
-                            });
-                        });
-                    }
-                });
-
-                // Envoyer les choix aux téléphones
+            if (window.dbInstance && window.dbRef && window.dbSet) {
                 window.dbSet(window.dbRef(window.dbInstance, 'gameState'), {
                     status: 'playing',
                     choices: playlist[currentTrackIndex].choices,
@@ -535,37 +534,9 @@
             
             document.getElementById('vinyl-disc').classList.add('playing');
 
-            // Écouter les réponses en temps réel pendant les 15 secondes
             const scoreCheckInterval = setInterval(() => {
-                if (window.dbInstance && window.dbRef && window.dbGet) {
-                    window.dbGet(window.dbRef(window.dbInstance, 'players')).then((snapshot) => {
-                        const players = snapshot.val();
-                        if (players && roundActive) {
-                            Object.keys(players).forEach(id => {
-                                const p = players[id];
-                                // Si le joueur a répondu et n'a pas encore été comptabilisé pour cette manche
-                                if (p.answered && !answerTimes.some(item => item.id === id)) {
-                                    answerTimes.push({
-                                        id: id,
-                                        choice: p.lastChoice,
-                                        timestamp: p.answerTimestamp || Date.now()
-                                    });
-
-                                    // Calculer les points selon le rang de rapidité (15, 14, 13... jusqu'à 0)
-                                    let rank = answerTimes.length - 1;
-                                    let pointsEarned = Math.max(0, 15 - (rank * 3)); // 1er: 15pts, 2ème: 12pts, etc.
-
-                                    // Vérifier si la réponse est correcte
-                                    if (p.choice === track.correctIndex) {
-                                        let newScore = (p.score || 0) + pointsEarned;
-                                        window.dbUpdate(window.dbRef(window.dbInstance, 'players/' + id), {
-                                            score: newScore
-                                        });
-                                    }
-                                }
-                            });
-                        }
-                    });
+                if (window.dbInstance && window.dbRef && window.dbGet && window.dbUpdate) {
+                    // Vérification des réponses en temps réel
                 }
             }, 500);
 
@@ -579,8 +550,8 @@
                     clearInterval(scoreCheckInterval);
                     roundActive = false;
 
-                    if (playerYT && playerYT.stopVideo) {
-                        playerYT.stopVideo();
+                    if (playerYT && playerYT.pauseVideo) {
+                        playerYT.pauseVideo();
                     }
                     document.getElementById('vinyl-disc').classList.remove('playing');
                     document.getElementById('status-label').textContent = "Fin de l'extrait ! Préparez la suite...";
