@@ -128,9 +128,11 @@
             margin-bottom: 5px;
         }
 
-        .game-header h3 {
-            font-size: 1.2rem;
-            font-weight: 600;
+        .mobile-timer {
+            font-size: 2.5rem;
+            font-weight: 900;
+            color: #ff007f;
+            margin: 5px 0;
         }
 
         .choices-container {
@@ -138,19 +140,19 @@
             flex: 1;
             display: flex;
             flex-direction: column;
-            gap: 15px;
+            gap: 12px;
             justify-content: center;
         }
 
         .choice-btn {
             width: 100%;
-            min-height: 85px;
+            min-height: 75px;
             border-radius: 16px;
             border: none;
             color: #ffffff;
-            font-size: 1.05rem;
+            font-size: 1rem;
             font-weight: bold;
-            padding: 15px;
+            padding: 12px;
             cursor: pointer;
             display: flex;
             align-items: center;
@@ -202,8 +204,8 @@
 
     <div id="screen-game" class="screen game-screen hidden">
         <div class="game-header">
-            <p>Sélectionne la bonne réponse</p>
-            <h3 id="question-label">Artiste et Titre ?</h3>
+            <p>Temps restant :</p>
+            <div class="mobile-timer" id="mobile-timer-display">15</div>
         </div>
 
         <div class="choices-container">
@@ -214,7 +216,7 @@
         </div>
 
         <div class="player-status-footer" id="answer-feedback">
-            Reste rapide pour maximiser tes points !
+            Choisis la bonne réponse !
         </div>
     </div>
 
@@ -244,6 +246,7 @@
         let playerId = "player_" + Math.random().toString(36).substr(2, 9);
         let playerColor = rainbowColors[Math.floor(Math.random() * rainbowColors.length)];
         let hasAnsweredCurrentRound = false;
+        let lastTrackIndex = null;
 
         window.joinGame = function() {
             const pseudo = document.getElementById('pseudo-input').value.trim();
@@ -270,20 +273,31 @@
         const gameStateRef = ref(db, 'gameState');
         onValue(gameStateRef, (snapshot) => {
             const state = snapshot.val();
-            if (state && state.status === 'playing') {
-                document.getElementById('screen-waiting').classList.add('hidden');
-                document.getElementById('screen-game').classList.remove('hidden');
-                
-                hasAnsweredCurrentRound = false;
-                document.getElementById('answer-feedback').textContent = "Choisis vite !";
-                
-                for (let i = 0; i < 4; i++) {
-                    document.getElementById(`choice-${i}`).disabled = false;
-                }
+            if (state) {
+                if (state.status === 'playing') {
+                    document.getElementById('screen-waiting').classList.add('hidden');
+                    document.getElementById('screen-game').classList.remove('hidden');
+                    
+                    // Si c'est un nouveau morceau, réactiver les boutons pour ce joueur
+                    if (state.trackIndex !== lastTrackIndex) {
+                        lastTrackIndex = state.trackIndex;
+                        hasAnsweredCurrentRound = false;
+                        document.getElementById('answer-feedback').textContent = "À toi de jouer !";
+                        for (let i = 0; i < 4; i++) {
+                            document.getElementById(`choice-${i}`).disabled = false;
+                        }
+                    }
 
-                if (state.choices) {
-                    for (let i = 0; i < 4; i++) {
-                        document.getElementById(`choice-${i}`).textContent = state.choices[i];
+                    // Mettre à jour le chrono mobile en direct
+                    if (state.timeLeft !== undefined) {
+                        document.getElementById('mobile-timer-display').textContent = state.timeLeft;
+                    }
+
+                    // Afficher uniquement les réponses épurées
+                    if (state.choices) {
+                        for (let i = 0; i < 4; i++) {
+                            document.getElementById(`choice-${i}`).textContent = state.choices[i];
+                        }
                     }
                 }
             }
@@ -297,7 +311,7 @@
                 document.getElementById(`choice-${i}`).disabled = true;
             }
 
-            document.getElementById('answer-feedback').textContent = "Réponse enregistrée ! En attente des résultats...";
+            document.getElementById('answer-feedback').textContent = "Réponse enregistrée !";
 
             update(ref(db, 'players/' + playerId), {
                 answered: true,
