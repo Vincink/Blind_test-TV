@@ -270,6 +270,7 @@
         onValue(gameStateRef, (snapshot) => {
             const state = snapshot.val();
             if (state && state.status === 'playing') {
+                // Si la manche est lancée, on réactive les boutons et on met à jour les choix de la manche
                 document.getElementById('screen-waiting').classList.add('hidden');
                 document.getElementById('screen-game').classList.remove('hidden');
                 
@@ -293,6 +294,7 @@
             hasAnsweredCurrentRound = true;
 
             for (let i = 0; i < 4; i++) {
+                document.getElementById(`choice-${i}`).disabled = false; // gardé désactivé par la suite
                 document.getElementById(`choice-${i}`).disabled = true;
             }
 
