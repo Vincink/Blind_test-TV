@@ -270,7 +270,7 @@
         onValue(gameStateRef, (snapshot) => {
             const state = snapshot.val();
             if (state && state.status === 'playing') {
-                // Si la manche est lancée, on réactive les boutons et on met à jour les choix de la manche
+                // Nouvelle manche lancée : on réactive les boutons pour ce tour
                 document.getElementById('screen-waiting').classList.add('hidden');
                 document.getElementById('screen-game').classList.remove('hidden');
                 
@@ -294,11 +294,10 @@
             hasAnsweredCurrentRound = true;
 
             for (let i = 0; i < 4; i++) {
-                document.getElementById(`choice-${i}`).disabled = false; // gardé désactivé par la suite
                 document.getElementById(`choice-${i}`).disabled = true;
             }
 
-            document.getElementById('answer-feedback').textContent = "Réponse enregistrée ! En attente des autres...";
+            document.getElementById('answer-feedback').textContent = "Réponse enregistrée ! En attente des résultats...";
 
             update(ref(db, 'players/' + playerId), {
                 answered: true,
