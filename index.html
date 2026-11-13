@@ -302,7 +302,7 @@
     <header>
         <h1>Blind Test (Objectif : 150 pts)</h1>
         <div class="controls">
-            <button class="btn" id="start-btn" onclick="startNextRound()">Lancer la manche</button>
+            <button class="btn" id="start-btn" onclick="startNextTrack()">Morceau suivant</button>
         </div>
     </header>
 
@@ -325,7 +325,7 @@
                 <div class="big-counter" id="big-counter">--</div>
             </div>
 
-            <!-- Lecteur Audio HTML5 direct, sans pub, fluide sur iPad -->
+            <!-- Lecteur Audio HTML5 sans pub -->
             <audio id="audio-player" preload="auto"></audio>
         </div>
 
@@ -388,11 +388,15 @@
             playersArray.sort((a, b) => (b.score || 0) - (a.score || 0));
             document.getElementById('player-count').textContent = playersArray.length;
 
+            let winnerFound = false;
             playersArray.forEach((player, index) => {
                 if ((player.score || 0) >= 150) {
-                    document.getElementById('status-label').textContent = `🏆 Victoire de ${player.name} !`;
-                    document.getElementById('big-counter').textContent = "150+";
-                    document.getElementById('start-btn').style.display = 'none';
+                    winnerFound = true;
+                    document.getElementById('status-label').textContent = `🏆 Victoire éclatante de ${player.name} !`;
+                    document.getElementById('big-counter').textContent = "150 pts";
+                    document.getElementById('start-btn').textContent = "Nouvelle partie";
+                    document.getElementById('start-btn').style.display = 'block';
+                    document.getElementById('start-btn').onclick = resetGameKeepPlayers;
                 }
 
                 const pill = document.createElement('div');
@@ -418,10 +422,10 @@
     </script>
 
     <script>
-        // Playlist de test avec des liens audio directs et propres (sans pubs)
+        // Playlist avec flux audio propres (remplace par tes futurs liens audio de flux)
         const playlist = [
             {
-                audioUrl: "https://actions.google.com/sounds/v1/ambiences/coffee_shop.ogg", // Exemple de son fluide
+                audioUrl: "https://actions.google.com/sounds/v1/ambiences/coffee_shop.ogg",
                 choices: ["Ambiance Café", "Indila - Dernière Danse", "Camélia Jordana - Non", "Zaz - Je veux"],
                 correctIndex: 0
             },
@@ -434,9 +438,31 @@
 
         let currentTrackIndex = 0;
         let roundActive = false;
-        let answerTimes = [];
+        let musicTimeLeft = 15;
 
-        function startNextRound() {
+        // Réinitialiser les scores à 0 mais garder les mêmes joueurs connectés pour une nouvelle partie
+        function resetGameKeepPlayers() {
+            if (window.dbInstance && window.dbRef && window.dbGet && window.dbUpdate) {
+                window.dbGet(window.dbRef(window.dbInstance, 'players')).then((snapshot) => {
+                    const players = snapshot.val();
+                    if (players) {
+                        Object.keys(players).forEach(playerId => {
+                            window.dbUpdate(window.dbRef(window.dbInstance, 'players/' + playerId), {
+                                score: 0,
+                                answered: false,
+                                lastChoice: null
+                            });
+                        });
+                    }
+                });
+            }
+            currentTrackIndex = 0;
+            document.getElementById('start-btn').textContent = "Morceau suivant";
+            document.getElementById('start-btn').onclick = startNextTrack;
+            startNextTrack();
+        }
+
+        function startNextTrack() {
             if (currentTrackIndex >= playlist.length) {
                 currentTrackIndex = 0;
             }
@@ -446,9 +472,8 @@
             audioElem.play().catch(() => {});
 
             roundActive = true;
-            answerTimes = [];
 
-            // Réinitialisation de l'état "answered" de chaque joueur SANS toucher à leurs scores cumulés
+            // Réinitialiser l'état "answered" de chaque joueur pour ce nouveau morceau (sans toucher aux scores cumulés)
             if (window.dbInstance && window.dbRef && window.dbGet && window.dbUpdate) {
                 window.dbGet(window.dbRef(window.dbInstance, 'players')).then((snapshot) => {
                     const players = snapshot.val();
@@ -462,7 +487,7 @@
                     }
                 });
 
-                // Envoi des choix aux téléphones
+                // Envoyer les choix aux téléphones
                 window.dbSet(window.dbRef(window.dbInstance, 'gameState'), {
                     status: 'playing',
                     choices: playlist[currentTrackIndex].choices,
@@ -473,23 +498,26 @@
             document.getElementById('qr-container').classList.add('minimized');
             document.getElementById('start-btn').style.display = 'none';
             
-            let countdown = 5;
-            document.getElementById('status-label').textContent = "La manche commence dans...";
+            // Compte à rebours de 3 secondes avant de lancer le morceau
+            let countdown3 = 3;
+            document.getElementById('status-label').textContent = "Préparez-vous...";
+            document.getElementById('big-counter').textContent = countdown3;
             
-            const timerInterval = setInterval(() => {
-                document.getElementById('big-counter').textContent = countdown;
-                countdown--;
-
-                if (countdown < 0) {
-                    clearInterval(timerInterval);
+            const prepInterval = setInterval(() => {
+                countdown3--;
+                if (countdown3 > 0) {
+                    document.getElementById('big-counter').textContent = countdown3;
+                } else {
+                    clearInterval(prepInterval);
                     startMusicSnippet();
                 }
             }, 1000);
         }
 
         function startMusicSnippet() {
-            document.getElementById('status-label').textContent = "Écoutez bien l'extrait ! (15s)";
-            document.getElementById('big-counter').textContent = "15";
+            document.getElementById('status-label').textContent = "Écoutez bien l'extrait !";
+            musicTimeLeft = 15;
+            document.getElementById('big-counter').textContent = musicTimeLeft;
             
             const track = playlist[currentTrackIndex];
             const audioElem = document.getElementById('audio-player');
@@ -498,54 +526,51 @@
             
             document.getElementById('vinyl-disc').classList.add('playing');
 
-            // Surveillance des réponses en temps réel pour attribuer les points de rapidité (de 15 à 0)
+            // Surveillance des réponses en temps réel : 15s = 15pts, 14s = 14pts ... 1s = 1pt
             const scoreCheckInterval = setInterval(() => {
-                if (window.dbInstance && window.dbRef && window.dbGet && window.dbUpdate) {
+                if (window.dbInstance && window.dbRef && window.dbGet && window.dbUpdate && roundActive) {
                     window.dbGet(window.dbRef(window.dbInstance, 'players')).then((snapshot) => {
                         const players = snapshot.val();
-                        if (players && roundActive) {
+                        if (players) {
                             Object.keys(players).forEach(id => {
                                 const p = players[id];
-                                if (p.answered && !answerTimes.some(item => item.id === id)) {
-                                    answerTimes.push({
-                                        id: id,
-                                        choice: p.lastChoice,
-                                        timestamp: p.answerTimestamp || Date.now()
-                                    });
-
-                                    let rank = answerTimes.length - 1;
-                                    let pointsEarned = Math.max(0, 15 - (rank * 3)); // 1er: 15pts, 2e: 12pts, etc.
-
+                                // Si le joueur a répondu mais n'a pas encore été crédité pour ce morceau
+                                if (p.answered && p.lastChoice !== null && !p.scoredThisRound) {
+                                    let pointsEarned = 0;
                                     if (p.lastChoice === track.correctIndex) {
-                                        let newScore = (p.score || 0) + pointsEarned;
-                                        window.dbUpdate(window.dbRef(window.dbInstance, 'players/' + id), {
-                                            score: newScore
-                                        });
+                                        // Barème exact : 15 points si musicTimeLeft = 15, ..., 1 point si musicTimeLeft = 1
+                                        pointsEarned = musicTimeLeft; 
                                     }
+
+                                    let newScore = (p.score || 0) + pointsEarned;
+                                    window.dbUpdate(window.dbRef(window.dbInstance, 'players/' + id), {
+                                        score: newScore,
+                                        scoredThisRound: true // Empêche de compter deux fois le même joueur sur le même morceau
+                                    });
                                 }
                             });
                         }
                     });
                 }
-            }, 500);
+            }, 200);
 
-            let musicTimeLeft = 15;
+            // Compte à rebours de la musique de 15 à 0 secondes
             const musicInterval = setInterval(() => {
                 musicTimeLeft--;
-                document.getElementById('big-counter').textContent = musicTimeLeft;
-
-                if (musicTimeLeft <= 0) {
+                if (musicTimeLeft > 0) {
+                    document.getElementById('big-counter').textContent = musicTimeLeft;
+                } else {
                     clearInterval(musicInterval);
                     clearInterval(scoreCheckInterval);
                     roundActive = false;
 
                     audioElem.pause();
                     document.getElementById('vinyl-disc').classList.remove('playing');
-                    document.getElementById('status-label').textContent = "Fin de l'extrait ! Préparez la suite...";
+                    document.getElementById('status-label').textContent = "Fin de l'extrait !";
                     document.getElementById('big-counter').textContent = "🎯";
                     
                     currentTrackIndex++;
-                    document.getElementById('start-btn').textContent = "Manche suivante";
+                    document.getElementById('start-btn').textContent = "Morceau suivant";
                     document.getElementById('start-btn').style.display = 'block';
                 }
             }, 1000);
