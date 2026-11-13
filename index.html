@@ -92,7 +92,8 @@
         }
 
         .left-zone.minimized .qr-title,
-        .left-zone.minimized .qr-instructions {
+        .left-zone.minimized .qr-instructions,
+        .left-zone.minimized .itunes-search-box {
             display: none;
         }
 
@@ -109,14 +110,15 @@
         }
 
         .qr-box {
-            width: 180px;
-            height: 180px;
+            width: 160px;
+            height: 160px;
             background: white;
-            padding: 10px;
+            padding: 8px;
             border-radius: 12px;
             display: flex;
             align-items: center;
             justify-content: center;
+            margin-bottom: 15px;
         }
 
         .qr-box img {
@@ -124,12 +126,22 @@
             height: 100%;
         }
 
-        .qr-instructions {
-            margin-top: 20px;
-            text-align: center;
+        .itunes-search-box {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin-top: 15px;
+        }
+
+        .itunes-search-box input {
+            padding: 8px 12px;
+            border-radius: 8px;
+            border: 1px solid rgba(255,255,255,0.2);
+            background: rgba(0,0,0,0.3);
+            color: white;
             font-size: 0.9rem;
-            color: #a0aec0;
-            line-height: 1.4;
+            outline: none;
         }
 
         .center-zone {
@@ -142,12 +154,12 @@
 
         .vinyl-container {
             position: relative;
-            width: 280px;
-            height: 280px;
+            width: 240px;
+            height: 240px;
             display: flex;
             align-items: center;
             justify-content: center;
-            margin-bottom: 30px;
+            margin-bottom: 20px;
         }
 
         .vinyl {
@@ -168,16 +180,17 @@
         }
 
         .vinyl-label {
-            width: 100px;
-            height: 100px;
+            width: 80px;
+            height: 80px;
             border-radius: 50%;
             background: linear-gradient(45deg, #ff007f, #7928ca);
             display: flex;
             align-items: center;
             justify-content: center;
             font-weight: bold;
-            font-size: 0.8rem;
-            border: 4px solid #fff;
+            font-size: 0.7rem;
+            border: 3px solid #fff;
+            text-align: center;
         }
 
         @keyframes spin {
@@ -190,16 +203,24 @@
         }
 
         .status-title {
-            font-size: 1.5rem;
+            font-size: 1.3rem;
             color: #a0aec0;
-            margin-bottom: 10px;
+            margin-bottom: 8px;
         }
 
         .big-counter {
-            font-size: 5rem;
+            font-size: 4rem;
             font-weight: 800;
             color: #ff007f;
             text-shadow: 0 0 20px rgba(255, 0, 127, 0.4);
+        }
+
+        .track-info-preview {
+            margin-top: 15px;
+            font-size: 1rem;
+            color: #e2e8f0;
+            font-weight: 600;
+            text-align: center;
         }
 
         .right-zone {
@@ -300,9 +321,9 @@
 <body>
 
     <header>
-        <h1>Blind Test (Objectif : 150 pts)</h1>
+        <h1>Blind Test Chanson Française (Objectif : 150 pts)</h1>
         <div class="controls">
-            <button class="btn" id="start-btn" onclick="startNextTrack()">Morceau suivant</button>
+            <button class="btn" id="start-btn" onclick="startCountdown3Sec()">Morceau suivant</button>
         </div>
     </header>
 
@@ -310,22 +331,28 @@
         <div class="left-zone" id="qr-container">
             <div class="qr-title">Rejoindre le jeu</div>
             <div class="qr-box" id="qr-code-box"></div>
-            <div class="qr-instructions">Scanne avec ton smartphone<br>pour jouer !</div>
+            <div class="qr-instructions" style="font-size: 0.85rem; color: #a0aec0; text-align: center;">Scanne avec ton smartphone pour jouer !</div>
+            
+            <div class="itunes-search-box">
+                <input type="text" id="itunes-query" placeholder="Recherche iTunes..." value="variete francaise">
+                <button class="btn" style="padding: 6px; font-size: 0.85rem;" onclick="fetchItunesPlaylist()">Charger les titres</button>
+            </div>
         </div>
 
         <div class="center-zone">
             <div class="vinyl-container">
                 <div class="vinyl" id="vinyl-disc">
-                    <div class="vinyl-label">BLIND TEST</div>
+                    <div class="vinyl-label" id="vinyl-label-text">BLIND TEST</div>
                 </div>
             </div>
             
             <div class="game-status-display">
-                <div class="status-title" id="status-label">En attente des joueurs...</div>
+                <div class="status-title" id="status-label">Clique sur "Morceau suivant" pour commencer</div>
                 <div class="big-counter" id="big-counter">--</div>
+                <div class="track-info-preview" id="track-info-preview"></div>
             </div>
 
-            <!-- Lecteur Audio HTML5 sans pub -->
+            <!-- Lecteur Audio HTML5 pour l'API iTunes (sans pub) -->
             <audio id="audio-player" preload="auto"></audio>
         </div>
 
@@ -388,10 +415,8 @@
             playersArray.sort((a, b) => (b.score || 0) - (a.score || 0));
             document.getElementById('player-count').textContent = playersArray.length;
 
-            let winnerFound = false;
             playersArray.forEach((player, index) => {
                 if ((player.score || 0) >= 150) {
-                    winnerFound = true;
                     document.getElementById('status-label').textContent = `🏆 Victoire éclatante de ${player.name} !`;
                     document.getElementById('big-counter').textContent = "150 pts";
                     document.getElementById('start-btn').textContent = "Nouvelle partie";
@@ -422,25 +447,66 @@
     </script>
 
     <script>
-        // Playlist avec flux audio propres (remplace par tes futurs liens audio de flux)
-        const playlist = [
-            {
-                audioUrl: "https://actions.google.com/sounds/v1/ambiences/coffee_shop.ogg",
-                choices: ["Ambiance Café", "Indila - Dernière Danse", "Camélia Jordana - Non", "Zaz - Je veux"],
-                correctIndex: 0
-            },
-            {
-                audioUrl: "https://actions.google.com/sounds/v1/animals/bird_chirping.ogg",
-                choices: ["Manau - La Tribu de Dana", "Chant d'Oiseaux", "Kendji Girac - Color Gitano", "Stromae - Alors on danse"],
-                correctIndex: 1
-            }
-        ];
-
+        let dynamicPlaylist = [];
         let currentTrackIndex = 0;
         let roundActive = false;
         let musicTimeLeft = 15;
 
-        // Réinitialiser les scores à 0 mais garder les mêmes joueurs connectés pour une nouvelle partie
+        // Chargement automatique des morceaux depuis l'API iTunes
+        async function fetchItunesPlaylist() {
+            const query = document.getElementById('itunes-query').value || "variete francaise";
+            document.getElementById('status-label').textContent = "Recherche des morceaux sur iTunes...";
+            
+            try {
+                const response = await fetch(`https://itunes.apple.com/search?term=${encodeURIComponent(query)}&entity=song&limit=20`);
+                const data = await response.json();
+                
+                // Filtrer uniquement les morceaux qui ont un previewUrl valide
+                const validTracks = data.results.filter(track => track.previewUrl && track.trackName && track.artistName);
+
+                if (validTracks.length < 4) {
+                    alert("Pas assez de morceaux trouvés avec audio. Essaie un autre terme !");
+                    return;
+                }
+
+                // Générer des choix aléatoires pour chaque morceau
+                dynamicPlaylist = validTracks.map((track, idx, arr) => {
+                    // Trouver 3 autres artistes/titres aléatoires pour les fausses réponses
+                    let choices = [`${track.artistName} - ${track.trackName}`];
+                    while (choices.length < 4) {
+                        let randomTrack = arr[Math.floor(Math.random() * arr.length)];
+                        let decoy = `${randomTrack.artistName} - ${randomTrack.trackName}`;
+                        if (!choices.includes(decoy)) {
+                            choices.push(decoy);
+                        }
+                    }
+                    // Mélanger les choix
+                    choices.sort(() => Math.random() - 0.5);
+                    let correctIndex = choices.indexOf(`${track.artistName} - ${track.trackName}`);
+
+                    return {
+                        audioUrl: track.previewUrl,
+                        trackName: track.trackName,
+                        artistName: track.artistName,
+                        choices: choices,
+                        correctIndex: correctIndex
+                    };
+                });
+
+                currentTrackIndex = 0;
+                document.getElementById('status-label').textContent = `${dynamicPlaylist.length} morceaux chargés avec succès !`;
+                document.getElementById('big-counter').textContent = "✅";
+            } catch (err) {
+                console.error(err);
+                alert("Erreur lors de la connexion à l'API iTunes.");
+            }
+        }
+
+        // Lancer le chargement iTunes dès l'ouverture de la page
+        window.addEventListener('DOMContentLoaded', () => {
+            fetchItunesPlaylist();
+        });
+
         function resetGameKeepPlayers() {
             if (window.dbInstance && window.dbRef && window.dbGet && window.dbUpdate) {
                 window.dbGet(window.dbRef(window.dbInstance, 'players')).then((snapshot) => {
@@ -458,22 +524,31 @@
             }
             currentTrackIndex = 0;
             document.getElementById('start-btn').textContent = "Morceau suivant";
-            document.getElementById('start-btn').onclick = startNextTrack;
-            startNextTrack();
+            document.getElementById('start-btn').onclick = startCountdown3Sec;
+            startCountdown3Sec();
         }
 
-        function startNextTrack() {
-            if (currentTrackIndex >= playlist.length) {
+        // Étape 1 : Compte à rebours de 3 secondes avant chaque morceau
+        function startCountdown3Sec() {
+            if (dynamicPlaylist.length === 0) {
+                alert("Veuillez patienter ou recharger les morceaux iTunes.");
+                fetchItunesPlaylist();
+                return;
+            }
+
+            if (currentTrackIndex >= dynamicPlaylist.length) {
                 currentTrackIndex = 0;
             }
 
-            // Déverrouillage audio interactif pour Safari / iPad
+            // Déverrouillage audio interactif pour iPad / Safari
             const audioElem = document.getElementById('audio-player');
             audioElem.play().catch(() => {});
 
-            roundActive = true;
+            document.getElementById('qr-container').classList.add('minimized');
+            document.getElementById('start-btn').style.display = 'none';
+            document.getElementById('track-info-preview').textContent = "";
 
-            // Réinitialiser l'état "answered" de chaque joueur pour ce nouveau morceau (sans toucher aux scores cumulés)
+            // Réinitialiser l'état des joueurs pour ce nouveau morceau (sans toucher aux scores cumulés)
             if (window.dbInstance && window.dbRef && window.dbGet && window.dbUpdate) {
                 window.dbGet(window.dbRef(window.dbInstance, 'players')).then((snapshot) => {
                     const players = snapshot.val();
@@ -481,28 +556,25 @@
                         Object.keys(players).forEach(playerId => {
                             window.dbUpdate(window.dbRef(window.dbInstance, 'players/' + playerId), {
                                 answered: false,
+                                scoredThisRound: false,
                                 lastChoice: null
                             });
                         });
                     }
                 });
 
-                // Envoyer les choix aux téléphones
+                // Envoyer les choix de ce morceau aux téléphones
                 window.dbSet(window.dbRef(window.dbInstance, 'gameState'), {
                     status: 'playing',
-                    choices: playlist[currentTrackIndex].choices,
+                    choices: dynamicPlaylist[currentTrackIndex].choices,
                     trackIndex: currentTrackIndex
                 });
             }
 
-            document.getElementById('qr-container').classList.add('minimized');
-            document.getElementById('start-btn').style.display = 'none';
-            
-            // Compte à rebours de 3 secondes avant de lancer le morceau
             let countdown3 = 3;
             document.getElementById('status-label').textContent = "Préparez-vous...";
             document.getElementById('big-counter').textContent = countdown3;
-            
+
             const prepInterval = setInterval(() => {
                 countdown3--;
                 if (countdown3 > 0) {
@@ -514,19 +586,21 @@
             }, 1000);
         }
 
+        // Étape 2 : Lancement de l'extrait iTunes et du chrono de 15s
         function startMusicSnippet() {
             document.getElementById('status-label').textContent = "Écoutez bien l'extrait !";
             musicTimeLeft = 15;
             document.getElementById('big-counter').textContent = musicTimeLeft;
             
-            const track = playlist[currentTrackIndex];
+            const track = dynamicPlaylist[currentTrackIndex];
             const audioElem = document.getElementById('audio-player');
             audioElem.src = track.audioUrl;
             audioElem.play();
             
             document.getElementById('vinyl-disc').classList.add('playing');
+            roundActive = true;
 
-            // Surveillance des réponses en temps réel : 15s = 15pts, 14s = 14pts ... 1s = 1pt
+            // Surveillance des réponses en temps réel : barème exact de 15 à 1 point seconde par seconde
             const scoreCheckInterval = setInterval(() => {
                 if (window.dbInstance && window.dbRef && window.dbGet && window.dbUpdate && roundActive) {
                     window.dbGet(window.dbRef(window.dbInstance, 'players')).then((snapshot) => {
@@ -534,18 +608,17 @@
                         if (players) {
                             Object.keys(players).forEach(id => {
                                 const p = players[id];
-                                // Si le joueur a répondu mais n'a pas encore été crédité pour ce morceau
                                 if (p.answered && p.lastChoice !== null && !p.scoredThisRound) {
                                     let pointsEarned = 0;
                                     if (p.lastChoice === track.correctIndex) {
                                         // Barème exact : 15 points si musicTimeLeft = 15, ..., 1 point si musicTimeLeft = 1
-                                        pointsEarned = musicTimeLeft; 
+                                        pointsEarned = musicTimeLeft;
                                     }
 
                                     let newScore = (p.score || 0) + pointsEarned;
                                     window.dbUpdate(window.dbRef(window.dbInstance, 'players/' + id), {
                                         score: newScore,
-                                        scoredThisRound: true // Empêche de compter deux fois le même joueur sur le même morceau
+                                        scoredThisRound: true
                                     });
                                 }
                             });
@@ -554,7 +627,7 @@
                 }
             }, 200);
 
-            // Compte à rebours de la musique de 15 à 0 secondes
+            // Chronomètre de 15 secondes
             const musicInterval = setInterval(() => {
                 musicTimeLeft--;
                 if (musicTimeLeft > 0) {
@@ -566,7 +639,10 @@
 
                     audioElem.pause();
                     document.getElementById('vinyl-disc').classList.remove('playing');
-                    document.getElementById('status-label').textContent = "Fin de l'extrait !";
+                    
+                    // Révéler la bonne réponse
+                    document.getElementById('status-label').textContent = "C'était :";
+                    document.getElementById('track-info-preview').textContent = `${track.artistName} - ${track.trackName}`;
                     document.getElementById('big-counter').textContent = "🎯";
                     
                     currentTrackIndex++;
