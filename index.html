@@ -203,7 +203,14 @@
         }
 
         #youtube-player-container {
-            display: none;
+            position: absolute;
+            top: 0;
+            left: 0;
+            opacity: 0.01;
+            pointer-events: none;
+            width: 1px;
+            height: 1px;
+            overflow: hidden;
         }
 
         .right-zone {
@@ -306,7 +313,7 @@
     <header>
         <h1>Blind Test Chanson Française</h1>
         <div class="controls">
-            <button class="btn" id="start-btn" onclick="startButtonClicked()">Lancer la partie</button>
+            <button class="btn" id="start-btn" onclick="startNextRound()">Lancer la manche</button>
         </div>
     </header>
 
@@ -347,7 +354,7 @@
     
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getDatabase, ref, onValue, set, update } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+        import { getDatabase, ref, onValue, set, update, get } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyC009nu3gKCkZczF_7w5Iqf9aUMd-TRsBM",
@@ -363,10 +370,12 @@
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
 
-        // Rendre 'db' et 'ref'/'set' accessibles globalement pour le lancement
-        window.dbRef = db;
-        window.firebaseRef = ref;
-        window.firebaseSet = set;
+        // Rendre Firebase accessible globalement pour les fonctions de contrôle
+        window.dbInstance = db;
+        window.dbRef = ref;
+        window.dbSet = set;
+        window.dbUpdate = update;
+        window.dbGet = get;
 
         const mobileUrl = "https://vincink.github.io/Blind_test-TV/mobile.html"; 
         
@@ -418,39 +427,72 @@
     </script>
 
     <script>
+        // Playlist de test avec plusieurs morceaux, leurs liens YouTube et les 4 choix de QCM
+        const playlist = [
+            {
+                videoId: "evOJ-Lh6gMs",
+                start: 45,
+                choices: ["Stromae - Papaoutai", "Indila - Dernière Danse", "Camélia Jordana - Non", "Zaz - Je veux"]
+            },
+            {
+                videoId: "1-S5l0CCu64", // Exemple autre titre (ex: DJ Mehdi / Autre hit)
+                start: 30,
+                choices: ["Manau - La Tribu de Dana", "Daft Punk - One More Time", "Kendji Girac - Color Gitano", "Stromae - Alors on danse"]
+            }
+        ];
+
+        let currentTrackIndex = 0;
         let playerYT;
+
         function onYouTubeIframeAPIReady() {
             playerYT = new YT.Player('yt-player', {
-                height: '0',
-                width: '0',
-                videoId: 'evOJ-Lh6gMs',
+                height: '100',
+                width: '100',
+                videoId: playlist[0].videoId,
                 playerVars: {
                     'autoplay': 0,
-                    'start': 45
+                    'start': playlist[0].start,
+                    'controls': 0
                 }
             });
         }
 
-        function startButtonClicked() {
-            // 1. Déverrouiller l'audio YouTube et informer Firebase que la partie commence
-            if (playerYT && playerYT.playVideo) {
-                playerYT.playVideo();
-                playerYT.stopVideo(); // Stop immédiat pour préparer la lecture propre au compte à rebours
+        function startNextRound() {
+            if (currentTrackIndex >= playlist.length) {
+                document.getElementById('status-label').textContent = "Fin du Blind Test ! Bravo à tous !";
+                document.getElementById('big-counter').textContent = "🏆";
+                return;
             }
 
-            // 2. Mettre à jour l'état dans Firebase pour réveiller les smartphones
-            if (window.dbRef && window.firebaseRef && window.firebaseSet) {
-                window.firebaseSet(window.firebaseRef(window.dbRef, 'gameState'), {
+            // 1. Déverrouillage audio obligatoire pour Safari/iPad au premier clic
+            if (playerYT && playerYT.playVideo) {
+                playerYT.playVideo();
+                playerYT.pauseVideo();
+            }
+
+            // 2. Réinitialiser le statut "answered: false" de tous les joueurs dans Firebase pour la nouvelle manche
+            if (window.dbInstance && window.dbRef && window.dbGet && window.dbUpdate) {
+                window.dbGet(window.dbRef(window.dbInstance, 'players')).then((snapshot) => {
+                    const players = snapshot.val();
+                    if (players) {
+                        Object.keys(players).forEach(playerId => {
+                            window.dbUpdate(window.dbRef(window.dbInstance, 'players/' + playerId), {
+                                answered: false,
+                                lastChoice: null
+                            });
+                        });
+                    }
+                });
+
+                // 3. Envoyer la nouvelle question et l'état "playing" aux téléphones
+                window.dbSet(window.dbRef(window.dbInstance, 'gameState'), {
                     status: 'playing',
-                    choices: ["Artiste 1 - Titre A", "Artiste 2 - Titre B", "Artiste 3 - Titre C", "Artiste 4 - Titre D"]
+                    choices: playlist[currentTrackIndex].choices
                 });
             }
 
-            startCountdown();
-        }
-
-        function startCountdown() {
             document.getElementById('qr-container').classList.add('minimized');
+            document.getElementById('start-btn').textContent = "Manche suivante";
             document.getElementById('start-btn').style.display = 'none';
             
             let countdown = 5;
@@ -471,7 +513,12 @@
             document.getElementById('status-label').textContent = "Écoutez bien l'extrait ! (15s)";
             document.getElementById('big-counter').textContent = "15";
             
-            if (playerYT && playerYT.playVideo) {
+            const track = playlist[currentTrackIndex];
+            if (playerYT && playerYT.loadVideoById) {
+                playerYT.loadVideoById({
+                    'videoId': track.videoId,
+                    'startSeconds': track.start
+                });
                 playerYT.playVideo();
             }
             
@@ -488,8 +535,11 @@
                         playerYT.stopVideo();
                     }
                     document.getElementById('vinyl-disc').classList.remove('playing');
-                    document.getElementById('status-label').textContent = "Fin de l'extrait ! Résultats...";
+                    document.getElementById('status-label').textContent = "Fin de l'extrait ! Préparez la suite...";
                     document.getElementById('big-counter').textContent = "🎯";
+                    
+                    currentTrackIndex++;
+                    document.getElementById('start-btn').style.display = 'block';
                 }
             }, 1000);
         }
