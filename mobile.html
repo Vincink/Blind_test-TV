@@ -165,9 +165,8 @@
         }
 
         .choice-btn:disabled {
-            opacity: 0.5;
+            opacity: 0.6;
             cursor: not-allowed;
-            filter: grayscale(50%);
         }
 
         .btn-pink { background: linear-gradient(135deg, #ff007f, #d60068); }
@@ -258,6 +257,8 @@
                 score: 0,
                 color: playerColor,
                 answered: false,
+                scoredThisRound: false,
+                lastChoice: null,
                 avatar: "https://i.pravatar.cc/150?img=" + Math.floor(Math.random() * 70)
             }).then(() => {
                 document.getElementById('screen-login').classList.add('hidden');
@@ -300,6 +301,7 @@
 
             update(ref(db, 'players/' + playerId), {
                 answered: true,
+                scoredThisRound: false,
                 lastChoice: choiceIndex,
                 answerTimestamp: Date.now()
             });
