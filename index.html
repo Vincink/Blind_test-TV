@@ -311,7 +311,7 @@
 <body>
 
     <header>
-        <h1>Blind Test Chanson Française</h1>
+        <h1>Blind Test Chanson Française (Objectif: 150 pts)</h1>
         <div class="controls">
             <button class="btn" id="start-btn" onclick="startNextRound()">Lancer la manche</button>
         </div>
@@ -343,7 +343,7 @@
 
         <div class="right-zone">
             <div class="players-header">
-                <h2>Joueurs connectés</h2>
+                <h2>Classement</h2>
                 <span class="players-count" id="player-count">0</span>
             </div>
             <div class="players-list" id="players-list"></div>
@@ -370,7 +370,6 @@
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
 
-        // Rendre Firebase accessible globalement pour les fonctions de contrôle
         window.dbInstance = db;
         window.dbRef = ref;
         window.dbSet = set;
@@ -400,10 +399,17 @@
                 ...data[key]
             }));
 
-            playersArray.sort((a, b) => b.score - a.score);
+            playersArray.sort((a, b) => (b.score || 0) - (a.score || 0));
             document.getElementById('player-count').textContent = playersArray.length;
 
+            // Vérifier si un joueur a atteint 150 points
             playersArray.forEach((player, index) => {
+                if ((player.score || 0) >= 150) {
+                    document.getElementById('status-label').textContent = `🏆 Victoire de ${player.name} !`;
+                    document.getElementById('big-counter').textContent = "150+";
+                    document.getElementById('start-btn').style.display = 'none';
+                }
+
                 const pill = document.createElement('div');
                 const statusClass = player.answered ? 'answered' : 'waiting';
                 
@@ -427,22 +433,26 @@
     </script>
 
     <script>
-        // Playlist de test avec plusieurs morceaux, leurs liens YouTube et les 4 choix de QCM
+        // Playlist avec la bonne réponse (correctIndex de 0 à 3)
         const playlist = [
             {
                 videoId: "evOJ-Lh6gMs",
                 start: 45,
-                choices: ["Stromae - Papaoutai", "Indila - Dernière Danse", "Camélia Jordana - Non", "Zaz - Je veux"]
+                choices: ["Stromae - Papaoutai", "Indila - Dernière Danse", "Camélia Jordana - Non", "Zaz - Je veux"],
+                correctIndex: 0
             },
             {
-                videoId: "1-S5l0CCu64", // Exemple autre titre (ex: DJ Mehdi / Autre hit)
+                videoId: "1-S5l0CCu64",
                 start: 30,
-                choices: ["Manau - La Tribu de Dana", "Daft Punk - One More Time", "Kendji Girac - Color Gitano", "Stromae - Alors on danse"]
+                choices: ["Manau - La Tribu de Dana", "Daft Punk - One More Time", "Kendji Girac - Color Gitano", "Stromae - Alors on danse"],
+                correctIndex: 1
             }
         ];
 
         let currentTrackIndex = 0;
         let playerYT;
+        let roundActive = false;
+        let answerTimes = []; // Enregistre l'ordre des réponses pour attribuer de 15 à 0 pts
 
         function onYouTubeIframeAPIReady() {
             playerYT = new YT.Player('yt-player', {
@@ -459,18 +469,19 @@
 
         function startNextRound() {
             if (currentTrackIndex >= playlist.length) {
-                document.getElementById('status-label').textContent = "Fin du Blind Test ! Bravo à tous !";
-                document.getElementById('big-counter').textContent = "🏆";
-                return;
+                currentTrackIndex = 0; // Boucle la playlist si nécessaire
             }
 
-            // 1. Déverrouillage audio obligatoire pour Safari/iPad au premier clic
+            // Déverrouillage audio iPad
             if (playerYT && playerYT.playVideo) {
                 playerYT.playVideo();
                 playerYT.pauseVideo();
             }
 
-            // 2. Réinitialiser le statut "answered: false" de tous les joueurs dans Firebase pour la nouvelle manche
+            roundActive = true;
+            answerTimes = [];
+
+            // Réinitialiser les réponses des joueurs pour la nouvelle manche (sans toucher aux scores cumulés)
             if (window.dbInstance && window.dbRef && window.dbGet && window.dbUpdate) {
                 window.dbGet(window.dbRef(window.dbInstance, 'players')).then((snapshot) => {
                     const players = snapshot.val();
@@ -484,15 +495,15 @@
                     }
                 });
 
-                // 3. Envoyer la nouvelle question et l'état "playing" aux téléphones
+                // Envoyer les choix aux téléphones
                 window.dbSet(window.dbRef(window.dbInstance, 'gameState'), {
                     status: 'playing',
-                    choices: playlist[currentTrackIndex].choices
+                    choices: playlist[currentTrackIndex].choices,
+                    trackIndex: currentTrackIndex
                 });
             }
 
             document.getElementById('qr-container').classList.add('minimized');
-            document.getElementById('start-btn').textContent = "Manche suivante";
             document.getElementById('start-btn').style.display = 'none';
             
             let countdown = 5;
@@ -524,6 +535,40 @@
             
             document.getElementById('vinyl-disc').classList.add('playing');
 
+            // Écouter les réponses en temps réel pendant les 15 secondes
+            const scoreCheckInterval = setInterval(() => {
+                if (window.dbInstance && window.dbRef && window.dbGet) {
+                    window.dbGet(window.dbRef(window.dbInstance, 'players')).then((snapshot) => {
+                        const players = snapshot.val();
+                        if (players && roundActive) {
+                            Object.keys(players).forEach(id => {
+                                const p = players[id];
+                                // Si le joueur a répondu et n'a pas encore été comptabilisé pour cette manche
+                                if (p.answered && !answerTimes.some(item => item.id === id)) {
+                                    answerTimes.push({
+                                        id: id,
+                                        choice: p.lastChoice,
+                                        timestamp: p.answerTimestamp || Date.now()
+                                    });
+
+                                    // Calculer les points selon le rang de rapidité (15, 14, 13... jusqu'à 0)
+                                    let rank = answerTimes.length - 1;
+                                    let pointsEarned = Math.max(0, 15 - (rank * 3)); // 1er: 15pts, 2ème: 12pts, etc.
+
+                                    // Vérifier si la réponse est correcte
+                                    if (p.choice === track.correctIndex) {
+                                        let newScore = (p.score || 0) + pointsEarned;
+                                        window.dbUpdate(window.dbRef(window.dbInstance, 'players/' + id), {
+                                            score: newScore
+                                        });
+                                    }
+                                }
+                            });
+                        }
+                    });
+                }
+            }, 500);
+
             let musicTimeLeft = 15;
             const musicInterval = setInterval(() => {
                 musicTimeLeft--;
@@ -531,6 +576,9 @@
 
                 if (musicTimeLeft <= 0) {
                     clearInterval(musicInterval);
+                    clearInterval(scoreCheckInterval);
+                    roundActive = false;
+
                     if (playerYT && playerYT.stopVideo) {
                         playerYT.stopVideo();
                     }
@@ -539,6 +587,7 @@
                     document.getElementById('big-counter').textContent = "🎯";
                     
                     currentTrackIndex++;
+                    document.getElementById('start-btn').textContent = "Manche suivante";
                     document.getElementById('start-btn').style.display = 'block';
                 }
             }, 1000);
