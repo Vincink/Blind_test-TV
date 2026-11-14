@@ -506,14 +506,14 @@
         <div class="header-right" id="header-menu-container" style="display: none;">
             <!-- Menu Burger Mobile -->
             <div class="burger-container">
-                <div class="burger-btn" onclick="playClickSound(); toggleBurgerMenu();">
+                <button class="burger-btn" id="burger-toggle-btn" type="button">
                     <span></span>
                     <span></span>
                     <span></span>
-                </div>
+                </button>
                 <div class="burger-menu" id="burger-dropdown">
                     <!-- Bouton Maître du jeu -->
-                    <button class="menu-action-btn admin-master" onclick="playClickSound(); promptAdminPassword()">Maître du jeu</button>
+                    <button class="menu-action-btn admin-master" id="btn-open-admin" type="button">Maître du jeu</button>
 
                     <!-- Section Admin (contrôle total) -->
                     <div id="admin-controls-section">
@@ -523,27 +523,27 @@
                         <div class="menu-item">
                             <label>Objectif de points :</label>
                             <div class="score-target-grid">
-                                <button class="target-btn active" id="btn-150" onclick="playClickSound(); setTargetScore(150)">150 pts</button>
-                                <button class="target-btn" id="btn-200" onclick="playClickSound(); setTargetScore(200)">200 pts</button>
-                                <button class="target-btn" id="btn-250" onclick="playClickSound(); setTargetScore(250)">250 pts</button>
-                                <button class="target-btn" id="btn-300" onclick="playClickSound(); setTargetScore(300)">300 pts</button>
+                                <button class="target-btn active" data-score="150" type="button">150 pts</button>
+                                <button class="target-btn" data-score="200" type="button">200 pts</button>
+                                <button class="target-btn" data-score="250" type="button">250 pts</button>
+                                <button class="target-btn" data-score="300" type="button">300 pts</button>
                             </div>
                         </div>
 
                         <div class="menu-divider"></div>
                         <label>Rechercher une playlist :</label>
                         <input type="text" id="burger-search-input" class="menu-search-input" placeholder="Ex: rock, 80s...">
-                        <button class="menu-action-btn" onclick="playClickSound(); searchFromBurger()">Charger la recherche</button>
+                        <button class="menu-action-btn" id="btn-search-burger" type="button">Charger la recherche</button>
                         
                         <div class="menu-divider"></div>
                         <label>Playlists favorites :</label>
                         <div class="favorites-container" id="favorites-list"></div>
-                        <button class="menu-action-btn" style="font-size: 0.75rem; padding: 6px;" onclick="playClickSound(); addCurrentQueryToFavorites()">Ajouter aux favoris</button>
+                        <button class="menu-action-btn" id="btn-add-fav" style="font-size: 0.75rem; padding: 6px;" type="button">Ajouter aux favoris</button>
 
                         <div class="menu-divider"></div>
-                        <button class="menu-action-btn" onclick="playClickSound(); masterResetScores()">Remettre scores à 0</button>
-                        <button class="menu-action-btn" onclick="playClickSound(); masterRelandGame()">Relancer (garder joueurs)</button>
-                        <button class="menu-action-btn danger" onclick="playClickSound(); masterStopGame()">Arrêter la partie</button>
+                        <button class="menu-action-btn" id="btn-reset-scores" type="button">Remettre scores à 0</button>
+                        <button class="menu-action-btn" id="btn-relaunch-game" type="button">Relancer (garder joueurs)</button>
+                        <button class="menu-action-btn danger" id="btn-stop-game" type="button">Arrêter la partie</button>
                     </div>
                 </div>
             </div>
@@ -564,7 +564,7 @@
         <div id="login-screen">
             <div class="input-group">
                 <label>Ton Pseudo</label>
-                <input type="text" id="player-name-input" placeholder="Ex: Alex" maxlength="15" oninput="updateCartoonAvatar()">
+                <input type="text" id="player-name-input" placeholder="Ex: Alex" maxlength="15">
             </div>
 
             <div class="input-group">
@@ -575,7 +575,7 @@
                 </div>
             </div>
 
-            <button class="btn-primary" onclick="playClickSound(); joinGame()">Rejoindre la partie</button>
+            <button class="btn-primary" id="btn-join-game" type="button">Rejoindre la partie</button>
         </div>
 
         <!-- ÉCRAN DE JEU -->
@@ -597,7 +597,7 @@
 
     <!-- Gros bouton Maître du jeu en bas de l'écran -->
     <div class="master-action-footer" id="master-footer">
-        <button class="master-big-btn" id="master-main-btn" onclick="playClickSound(); handleMasterAction()">Démarrer la partie</button>
+        <button class="master-big-btn" id="master-main-btn" type="button">Démarrer la partie</button>
     </div>
 
     <script type="module">
@@ -618,7 +618,7 @@
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
 
-        window.playClickSound = function() {
+        function playClickSound() {
             try {
                 const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
                 const osc = audioCtx.createOscillator();
@@ -637,9 +637,10 @@
                 osc.start();
                 osc.stop(audioCtx.currentTime + 0.04);
             } catch(e) {}
-        };
+        }
 
-        window.showAlertModal = function(title, message) {
+        function showAlertModal(title, message) {
+            playClickSound();
             const overlay = document.getElementById('custom-modal');
             document.getElementById('modal-title').textContent = title;
             document.getElementById('modal-message').textContent = message;
@@ -650,16 +651,18 @@
             const okBtn = document.createElement('button');
             okBtn.className = 'modal-btn primary';
             okBtn.textContent = "OK";
+            okBtn.type = "button";
             okBtn.onclick = () => { playClickSound(); overlay.classList.remove('open'); };
             btnContainer.appendChild(okBtn);
 
             overlay.classList.add('open');
-        };
+        }
 
-        window.toggleBurgerMenu = function() {
-            const dropdown = document.getElementById('burger-dropdown');
-            dropdown.classList.toggle('open');
-        };
+        // Gestion du menu burger
+        document.getElementById('burger-toggle-btn').addEventListener('click', () => {
+            playClickSound();
+            document.getElementById('burger-dropdown').classList.toggle('open');
+        });
 
         // Anti-mise en veille (Wake Lock API)
         let wakeLock = null;
@@ -682,11 +685,12 @@
             return `https://api.dicebear.com/7.x/bottts/svg?seed=${encodeURIComponent(safeSeed)}`;
         }
 
-        window.updateCartoonAvatar = function() {
-            const name = document.getElementById('player-name-input').value;
-            const url = getCartoonAvatarUrl(name);
+        const nameInputEl = document.getElementById('player-name-input');
+        nameInputEl.addEventListener('input', () => {
+            const url = getCartoonAvatarUrl(nameInputEl.value);
             document.getElementById('preview-avatar').style.backgroundImage = `url('${url}')`;
-        };
+        });
+        document.getElementById('preview-avatar').style.backgroundImage = `url('${getCartoonAvatarUrl("")}')`;
 
         const playerColors = ["#ff007f", "#7928ca", "#22c55e", "#3b82f6", "#eab308", "#ef4444", "#06b6d4", "#ec4899", "#8b5cf6"];
         let assignedColor = playerColors[Math.floor(Math.random() * playerColors.length)];
@@ -694,12 +698,12 @@
         let playerId = localStorage.getItem('blindtest_player_id') || 'player_' + Math.random().toString(36.2).substring(2, 9);
         localStorage.setItem('blindtest_player_id', playerId);
 
-        window.updateCartoonAvatar();
-
-        window.joinGame = function() {
-            const nameInput = document.getElementById('player-name-input').value.trim();
+        // Connexion au jeu
+        document.getElementById('btn-join-game').addEventListener('click', () => {
+            playClickSound();
+            const nameInput = nameInputEl.value.trim();
             if (!nameInput) {
-                window.showAlertModal("Attention", "Veuillez entrer un pseudo !");
+                showAlertModal("Attention", "Veuillez entrer un pseudo !");
                 return;
             }
 
@@ -738,7 +742,7 @@
                 listenToPersonalScore();
                 renderFavorites();
             });
-        };
+        });
 
         function listenToPersonalScore() {
             onValue(ref(db, 'players/' + playerId), (snapshot) => {
@@ -752,7 +756,8 @@
         // --- GESTION DU MODE MAÎTRE DU JEU (ADMIN) ---
         let gameHasStartedMaster = false;
 
-        window.promptAdminPassword = function() {
+        document.getElementById('btn-open-admin').addEventListener('click', () => {
+            playClickSound();
             const overlay = document.getElementById('custom-modal');
             document.getElementById('modal-title').textContent = "Accès Maître du jeu";
             document.getElementById('modal-message').innerHTML = `Entrez le mot de passe administrateur :<br><br><input type="password" id="admin-pwd-input" class="menu-password-input" placeholder="Mot de passe">`;
@@ -763,12 +768,14 @@
             const cancelBtn = document.createElement('button');
             cancelBtn.className = 'modal-btn';
             cancelBtn.textContent = "Annuler";
+            cancelBtn.type = "button";
             cancelBtn.onclick = () => { playClickSound(); overlay.classList.remove('open'); };
             btnContainer.appendChild(cancelBtn);
 
             const valBtn = document.createElement('button');
             valBtn.className = 'modal-btn primary';
             valBtn.textContent = "Valider";
+            valBtn.type = "button";
             valBtn.onclick = () => {
                 playClickSound();
                 const pwd = document.getElementById('admin-pwd-input').value;
@@ -776,67 +783,70 @@
                     overlay.classList.remove('open');
                     document.getElementById('admin-controls-section').style.display = 'flex';
                     document.getElementById('master-footer').style.display = 'block';
-                    window.showAlertModal("Succès", "Mode Maître du jeu activé !");
+                    showAlertModal("Succès", "Mode Maître du jeu activé !");
                 } else {
                     overlay.classList.remove('open');
-                    window.showAlertModal("Erreur", "Mot de passe incorrect.");
+                    showAlertModal("Erreur", "Mot de passe incorrect.");
                 }
             };
             btnContainer.appendChild(valBtn);
 
             overlay.classList.add('open');
-        };
+        });
 
-        window.setTargetScore = function(score) {
-            set(ref(db, 'gameState/targetScore'), score);
-            [150, 200, 250, 300].forEach(val => {
-                const btn = document.getElementById(`btn-${val}`);
-                if (val === score) {
-                    btn.classList.add('active');
-                } else {
-                    btn.classList.remove('active');
-                }
+        // Objectif de points
+        document.querySelectorAll('.target-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                playClickSound();
+                const score = parseInt(btn.getAttribute('data-score'));
+                set(ref(db, 'gameState/targetScore'), score);
+                document.querySelectorAll('.target-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
             });
-        };
+        });
 
-        window.handleMasterAction = function() {
+        // Gros bouton bas de l'écran (Démarrer / Morceau suivant) synchronisé sur nextSong comme l'iPad l'attend
+        document.getElementById('master-main-btn').addEventListener('click', () => {
+            playClickSound();
             gameHasStartedMaster = true;
             document.getElementById('master-main-btn').textContent = "Morceau suivant";
             document.getElementById('master-main-btn').style.background = "#7928ca";
-            // Écriture de l'action de télécommande universelle reconnue par la TV
-            set(ref(db, 'gameState/remoteAction'), { type: 'next', timestamp: Date.now() });
-        };
+            set(ref(db, 'gameState/nextSong'), Date.now());
+        });
 
-        window.masterResetScores = function() {
+        document.getElementById('btn-reset-scores').addEventListener('click', () => {
+            playClickSound();
             get(ref(db, 'players')).then((snapshot) => {
                 const players = snapshot.val();
                 if (players) {
                     Object.keys(players).forEach(id => {
                         update(ref(db, 'players/' + id), { score: 0, answered: false, lastChoice: null, lastEarnedPoints: 0 });
                     });
-                    window.showAlertModal("Scores", "Scores remis à zéro.");
+                    showAlertModal("Scores", "Scores remis à zéro.");
                 }
             });
-            toggleBurgerMenu();
-        };
+            document.getElementById('burger-dropdown').classList.remove('open');
+        });
 
-        window.masterRelandGame = function() {
+        document.getElementById('btn-relaunch-game').addEventListener('click', () => {
+            playClickSound();
             gameHasStartedMaster = true;
             document.getElementById('master-main-btn').textContent = "Morceau suivant";
             document.getElementById('master-main-btn').style.background = "#7928ca";
-            set(ref(db, 'gameState/remoteAction'), { type: 'relaunch', timestamp: Date.now() });
-            window.showAlertModal("Partie", "Nouvelle partie lancée !");
-            toggleBurgerMenu();
-        };
+            set(ref(db, 'gameState/nextSong'), Date.now());
+            showAlertModal("Partie", "Nouvelle partie lancée !");
+            document.getElementById('burger-dropdown').classList.remove('open');
+        });
 
-        window.masterStopGame = function() {
+        document.getElementById('btn-stop-game').addEventListener('click', () => {
+            playClickSound();
             gameHasStartedMaster = false;
             document.getElementById('master-main-btn').textContent = "Démarrer la partie";
             document.getElementById('master-main-btn').style.background = "#22c55e";
-            set(ref(db, 'gameState/remoteAction'), { type: 'stop', timestamp: Date.now() });
-            window.showAlertModal("Partie", "Partie arrêtée.");
-            toggleBurgerMenu();
-        };
+            set(ref(db, 'gameState/status'), 'stopped');
+            showAlertModal("Partie", "Partie arrêtée.");
+            document.getElementById('burger-dropdown').classList.remove('open');
+        });
 
         // --- FAVORIS ET RECHERCHE ADMIN ---
         const defaultFavorites = ["variete francaise", "annees 80", "rock", "disney", "hits 2024"];
@@ -851,7 +861,7 @@
             renderFavorites();
         }
 
-        window.renderFavorites = function() {
+        function renderFavorites() {
             const container = document.getElementById('favorites-list');
             if (!container) return;
             const favs = getFavorites();
@@ -860,49 +870,61 @@
             favs.forEach(fav => {
                 const pill = document.createElement('div');
                 pill.className = 'fav-pill';
-                pill.innerHTML = `
-                    <span onclick="playClickSound(); selectFavorite('${fav}')">${fav}</span>
-                    <span class="delete-fav" onclick="playClickSound(); removeFavorite('${fav}', event)">✕</span>
-                `;
+                
+                const spanText = document.createElement('span');
+                spanText.textContent = fav;
+                spanText.addEventListener('click', () => {
+                    playClickSound();
+                    document.getElementById('burger-search-input').value = fav;
+                    searchFromBurger();
+                });
+
+                const spanDel = document.createElement('span');
+                spanDel.className = 'delete-fav';
+                spanDel.textContent = "✕";
+                spanDel.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    playClickSound();
+                    let fList = getFavorites();
+                    fList = fList.filter(f => f !== fav);
+                    saveFavorites(fList);
+                });
+
+                pill.appendChild(spanText);
+                pill.appendChild(spanDel);
                 container.appendChild(pill);
             });
-        };
+        }
 
-        window.selectFavorite = function(fav) {
-            document.getElementById('burger-search-input').value = fav;
-            searchFromBurger();
-        };
-
-        window.removeFavorite = function(fav, event) {
-            event.stopPropagation();
-            let favs = getFavorites();
-            favs = favs.filter(f => f !== fav);
-            saveFavorites(favs);
-        };
-
-        window.searchFromBurger = function() {
+        function searchFromBurger() {
             const query = document.getElementById('burger-search-input').value.trim();
             if (!query) return;
             set(ref(db, 'gameState/remoteQuery'), query);
-            window.showAlertModal("Recherche", `Playlist "${query}" transmise à la TV.`);
-            toggleBurgerMenu();
-        };
+            showAlertModal("Recherche", `Playlist "${query}" transmise à la TV.`);
+            document.getElementById('burger-dropdown').classList.remove('open');
+        }
 
-        window.addCurrentQueryToFavorites = function() {
+        document.getElementById('btn-search-burger').addEventListener('click', () => {
+            playClickSound();
+            searchFromBurger();
+        });
+
+        document.getElementById('btn-add-fav').addEventListener('click', () => {
+            playClickSound();
             const query = document.getElementById('burger-search-input').value.trim();
             if (!query) {
-                window.showAlertModal("Attention", "Entrez un terme de recherche.");
+                showAlertModal("Attention", "Entrez un terme de recherche.");
                 return;
             }
             let favs = getFavorites();
             if (!favs.includes(query)) {
                 favs.push(query);
                 saveFavorites(favs);
-                window.showAlertModal("Succès", `"${query}" ajouté aux favoris.`);
+                showAlertModal("Succès", `"${query}" ajouté aux favoris.`);
             } else {
-                window.showAlertModal("Information", "Déjà dans les favoris.");
+                showAlertModal("Information", "Déjà dans les favoris.");
             }
-        };
+        });
 
         function listenToGameState() {
             onValue(ref(db, 'gameState'), (snapshot) => {
@@ -921,26 +943,33 @@
                 
                 state.choices.forEach((choice, index) => {
                     const btnColor = choiceColors[index % choiceColors.length];
-                    html += `<button class="choice-btn" id="choice-${index}" style="background-color: ${btnColor};" onclick="playClickSound(); makeChoice(${index})">${choice}</button>`;
+                    html += `<button class="choice-btn" id="choice-${index}" style="background-color: ${btnColor};" data-index="${index}">${choice}</button>`;
                 });
                 
                 html += `</div>`;
                 board.innerHTML = html;
+
+                document.querySelectorAll('.choice-btn').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        playClickSound();
+                        const idx = parseInt(e.currentTarget.getAttribute('data-index'));
+                        makeChoice(idx, e.currentTarget);
+                    });
+                });
             });
         }
 
-        window.makeChoice = function(choiceIndex) {
+        function makeChoice(choiceIndex, clickedBtn) {
             const buttons = document.querySelectorAll('.choice-btn');
             buttons.forEach(btn => btn.disabled = true);
             
-            const clickedBtn = document.getElementById(`choice-${choiceIndex}`);
             if (clickedBtn) clickedBtn.classList.add('selected');
 
             update(ref(db, 'players/' + playerId), {
                 answered: true,
                 lastChoice: choiceIndex
             });
-        };
+        }
     </script>
 </body>
 </html>
