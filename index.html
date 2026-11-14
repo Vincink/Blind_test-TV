@@ -576,8 +576,9 @@
         .top-three-list {
             display: flex;
             flex-direction: column;
-            gap: 10px;
+            gap: 12px;
             flex-shrink: 0;
+            align-items: center;
         }
 
         .scrollable-players-wrapper {
@@ -585,15 +586,16 @@
             overflow: hidden;
             position: relative;
             border-top: 1px dashed rgba(255, 255, 255, 0.15);
-            padding-top: 10px;
+            padding-top: 12px;
         }
 
         .scrollable-players-inner {
             display: flex;
             flex-direction: column;
-            gap: 10px;
+            gap: 12px;
             position: absolute;
             width: 100%;
+            align-items: center;
             animation: smoothMarquee 12s ease-in-out infinite alternate;
         }
 
@@ -602,11 +604,15 @@
             100% { transform: translateY(calc(-100% + 150px)); }
         }
 
+        /* PASTILLES COMPACTES, CENTRÉES ET TEXTES AGRANDIS POUR LA TÉLÉ */
         .player-row-wrapper {
             position: relative;
             overflow: hidden;
             border-radius: 14px;
             flex-shrink: 0;
+            width: 100%;
+            max-width: 400px;
+            margin: 0 auto;
         }
 
         .player-delete-action {
@@ -620,7 +626,7 @@
             align-items: center;
             justify-content: center;
             color: white;
-            font-size: 1.2rem;
+            font-size: 1.4rem;
             cursor: pointer;
             border-top-right-radius: 14px;
             border-bottom-right-radius: 14px;
@@ -636,7 +642,7 @@
             position: relative;
             display: flex;
             align-items: center;
-            padding: 10px 15px;
+            padding: 12px 18px;
             border-radius: 14px;
             background: rgba(25, 30, 45, 0.9);
             transition: transform 0.2s ease;
@@ -644,6 +650,7 @@
             box-shadow: 0 0 15px 2px var(--player-glow);
             z-index: 2;
             touch-action: pan-y;
+            width: 100%;
         }
 
         .player-pill.swiped {
@@ -652,19 +659,20 @@
 
         .player-rank {
             font-weight: 800;
-            font-size: 1.1rem;
-            width: 30px;
+            font-size: 1.3rem;
+            width: 35px;
             color: #ffffff;
         }
 
         .player-avatar {
-            width: 34px;
-            height: 34px;
+            width: 44px;
+            height: 44px;
             border-radius: 50%;
             background-size: cover;
             background-position: center;
             margin-right: 15px;
             border: 2px solid white;
+            flex-shrink: 0;
         }
 
         .player-info {
@@ -675,21 +683,25 @@
         }
 
         .player-name {
-            font-weight: 600;
-            font-size: 1rem;
+            font-weight: 700;
+            font-size: 1.35rem;
             color: #ffffff;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 160px;
         }
 
         .points-badge {
             background: rgba(0, 0, 0, 0.85);
-            padding: 3px 8px;
+            padding: 4px 10px;
             border-radius: 12px;
             font-weight: 900;
-            font-size: 0.95rem;
+            font-size: 1.15rem;
             border: 2px solid var(--player-color);
             color: var(--player-color);
             box-shadow: 0 0 12px var(--player-color);
-            margin-right: 12px;
+            margin-right: 10px;
             animation: longFadeShow 9s ease-out forwards;
             z-index: 5;
         }
@@ -710,7 +722,7 @@
 
         .player-score {
             font-weight: 800;
-            font-size: 1.1rem;
+            font-size: 1.4rem;
         }
     </style>
 </head>
@@ -996,7 +1008,6 @@
                 window.gameOverTriggered = false;
                 window.updateTargetScoreUI();
 
-                // RESTAURATION DE LA PREMIÈRE PAGE (Affichage du panneau de gauche complet)
                 document.getElementById('qr-container').classList.remove('minimized');
 
                 document.getElementById('status-label').textContent = "Charge les morceaux puis clique sur Démarrer";
@@ -1294,14 +1305,37 @@
                         }));
                         playersArray.sort((a, b) => (b.score || 0) - (a.score || 0));
                         
-                        const winner = playersArray[0];
-                        document.getElementById('status-label').textContent = `Victoire éclatante de ${winner.name} !`;
-                        document.getElementById('big-counter').textContent = `${winner.score} pts`;
+                        let maxScoreAchieved = 0;
+                        let potentialWinners = [];
+
+                        playersArray.forEach(player => {
+                            const currentScore = player.score || 0;
+                            if (currentScore >= window.winningScore) {
+                                if (currentScore > maxScoreAchieved) {
+                                    maxScoreAchieved = currentScore;
+                                    potentialWinners = [player];
+                                } else if (currentScore === maxScoreAchieved) {
+                                    potentialWinners.push(player);
+                                }
+                            }
+                        });
+
+                        if (potentialWinners.length > 1) {
+                            const names = potentialWinners.map(w => w.name).join(', ');
+                            document.getElementById('status-label').textContent = `Égalité Parfaite (Ex-aequo) !`;
+                            document.getElementById('track-info-preview').textContent = `${names} (${maxScoreAchieved} pts)`;
+                        } else if (potentialWinners.length === 1) {
+                            document.getElementById('status-label').textContent = `Victoire éclatante de ${potentialWinners[0].name} !`;
+                            document.getElementById('track-info-preview').textContent = `${maxScoreAchieved} pts atteint !`;
+                        } else {
+                            const winner = playersArray[0];
+                            document.getElementById('status-label').textContent = `Victoire de ${winner.name} !`;
+                            document.getElementById('track-info-preview').textContent = `${winner.score} pts`;
+                        }
+                        document.getElementById('big-counter').textContent = `${maxScoreAchieved || playersArray[0].score} pts`;
                     }
                 });
             }
-
-            document.getElementById('track-info-preview').textContent = `Partie terminée. Objectif de ${window.winningScore} atteint.`;
             
             const startBtn = document.getElementById('start-btn');
             document.getElementById('start-btn-text').textContent = "Nouvelle partie";
