@@ -55,7 +55,6 @@
             align-items: center;
             gap: 4px;
             cursor: pointer;
-            touch-action: manipulation;
         }
 
         .burger-btn span {
@@ -127,7 +126,6 @@
             font-size: 0.85rem;
             cursor: pointer;
             text-align: center;
-            touch-action: manipulation;
         }
 
         .target-btn.active {
@@ -146,7 +144,6 @@
             cursor: pointer;
             text-align: left;
             transition: background 0.2s;
-            touch-action: manipulation;
         }
 
         .menu-action-btn:hover {
@@ -183,7 +180,6 @@
             display: flex;
             align-items: center;
             gap: 6px;
-            touch-action: manipulation;
         }
 
         .fav-pill .delete-fav {
@@ -274,7 +270,6 @@
             border: 1px solid rgba(255, 255, 255, 0.15);
             background: rgba(255, 255, 255, 0.08);
             color: white;
-            touch-action: manipulation;
         }
 
         .modal-btn.primary {
@@ -359,7 +354,6 @@
             font-weight: bold;
             cursor: pointer;
             box-shadow: 0 5px 20px rgba(121, 40, 202, 0.4);
-            touch-action: manipulation;
         }
 
         /* Écran de Jeu */
@@ -445,7 +439,6 @@
             transition: all 0.15s ease;
             text-align: center;
             box-shadow: 0 6px 20px rgba(0,0,0,0.4);
-            touch-action: manipulation;
         }
 
         .choice-btn:active:not(:disabled) {
@@ -494,7 +487,6 @@
             cursor: pointer;
             box-shadow: 0 10px 25px rgba(34, 197, 94, 0.5);
             text-align: center;
-            touch-action: manipulation;
         }
     </style>
 </head>
@@ -506,16 +498,16 @@
         <div class="header-right" id="header-menu-container" style="display: none;">
             <!-- Menu Burger Mobile -->
             <div class="burger-container">
-                <button class="burger-btn" id="burger-toggle-btn" type="button">
+                <div class="burger-btn" onclick="toggleBurgerMenu()">
                     <span></span>
                     <span></span>
                     <span></span>
-                </button>
+                </div>
                 <div class="burger-menu" id="burger-dropdown">
                     <!-- Bouton Maître du jeu -->
-                    <button class="menu-action-btn admin-master" id="btn-open-admin" type="button">Maître du jeu</button>
+                    <button class="menu-action-btn admin-master" onclick="promptAdminPassword()">Maître du jeu</button>
 
-                    <!-- Section Admin (contrôle total) -->
+                    <!-- Section Admin -->
                     <div id="admin-controls-section">
                         <label style="font-size: 0.8rem; color: #ff007f; font-weight: bold;">CONTRÔLE MAÎTRE DU JEU</label>
                         
@@ -523,34 +515,34 @@
                         <div class="menu-item">
                             <label>Objectif de points :</label>
                             <div class="score-target-grid">
-                                <button class="target-btn active" data-score="150" type="button">150 pts</button>
-                                <button class="target-btn" data-score="200" type="button">200 pts</button>
-                                <button class="target-btn" data-score="250" type="button">250 pts</button>
-                                <button class="target-btn" data-score="300" type="button">300 pts</button>
+                                <button class="target-btn active" id="btn-150" onclick="setTargetScore(150)">150 pts</button>
+                                <button class="target-btn" id="btn-200" onclick="setTargetScore(200)">200 pts</button>
+                                <button class="target-btn" id="btn-250" onclick="setTargetScore(250)">250 pts</button>
+                                <button class="target-btn" id="btn-300" onclick="setTargetScore(300)">300 pts</button>
                             </div>
                         </div>
 
                         <div class="menu-divider"></div>
                         <label>Rechercher une playlist :</label>
                         <input type="text" id="burger-search-input" class="menu-search-input" placeholder="Ex: rock, 80s...">
-                        <button class="menu-action-btn" id="btn-search-burger" type="button">Charger la recherche</button>
+                        <button class="menu-action-btn" onclick="searchFromBurger()">Charger la recherche</button>
                         
                         <div class="menu-divider"></div>
                         <label>Playlists favorites :</label>
                         <div class="favorites-container" id="favorites-list"></div>
-                        <button class="menu-action-btn" id="btn-add-fav" style="font-size: 0.75rem; padding: 6px;" type="button">Ajouter aux favoris</button>
+                        <button class="menu-action-btn" style="font-size: 0.75rem; padding: 6px;" onclick="addCurrentQueryToFavorites()">Ajouter aux favoris</button>
 
                         <div class="menu-divider"></div>
-                        <button class="menu-action-btn" id="btn-reset-scores" type="button">Remettre scores à 0</button>
-                        <button class="menu-action-btn" id="btn-relaunch-game" type="button">Relancer (garder joueurs)</button>
-                        <button class="menu-action-btn danger" id="btn-stop-game" type="button">Arrêter la partie</button>
+                        <button class="menu-action-btn" onclick="masterResetScores()">Remettre scores à 0</button>
+                        <button class="menu-action-btn" onclick="masterRelandGame()">Relancer (garder joueurs)</button>
+                        <button class="menu-action-btn danger" onclick="masterStopGame()">Arrêter la partie</button>
                     </div>
                 </div>
             </div>
         </div>
     </header>
 
-    <!-- Modale de dialogue personnalisée -->
+    <!-- Modale de dialogue -->
     <div class="modal-overlay" id="custom-modal">
         <div class="modal-card">
             <div class="modal-title" id="modal-title">Information</div>
@@ -564,7 +556,7 @@
         <div id="login-screen">
             <div class="input-group">
                 <label>Ton Pseudo</label>
-                <input type="text" id="player-name-input" placeholder="Ex: Alex" maxlength="15">
+                <input type="text" id="player-name-input" placeholder="Ex: Alex" maxlength="15" oninput="updateCartoonAvatar()">
             </div>
 
             <div class="input-group">
@@ -575,12 +567,12 @@
                 </div>
             </div>
 
-            <button class="btn-primary" id="btn-join-game" type="button">Rejoindre la partie</button>
+            <button class="btn-primary" onclick="joinGame()">Rejoindre la partie</button>
         </div>
 
         <!-- ÉCRAN DE JEU -->
         <div id="game-screen">
-            <!-- Pastille de score personnelle du joueur -->
+            <!-- Pastille de score -->
             <div class="player-pill-container" id="my-player-pill">
                 <div class="player-profile-left">
                     <div class="player-avatar-badge" id="display-avatar"></div>
@@ -597,7 +589,7 @@
 
     <!-- Gros bouton Maître du jeu en bas de l'écran -->
     <div class="master-action-footer" id="master-footer">
-        <button class="master-big-btn" id="master-main-btn" type="button">Démarrer la partie</button>
+        <button class="master-big-btn" id="master-main-btn" onclick="handleMasterAction()">Démarrer la partie</button>
     </div>
 
     <script type="module">
@@ -618,90 +610,75 @@
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
 
-        function playClickSound() {
+        // Rendre les fonctions accessibles globalement pour les attributs onclick du HTML
+        window.playClickSound = function() {
             try {
                 const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
                 const osc = audioCtx.createOscillator();
                 const gain = audioCtx.createGain();
-                
                 osc.type = 'sine';
                 osc.frequency.setValueAtTime(600, audioCtx.currentTime);
                 osc.frequency.exponentialRampToValueAtTime(200, audioCtx.currentTime + 0.04);
-                
                 gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
                 gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.04);
-                
                 osc.connect(gain);
                 gain.connect(audioCtx.destination);
-                
                 osc.start();
                 osc.stop(audioCtx.currentTime + 0.04);
             } catch(e) {}
-        }
+        };
 
-        function showAlertModal(title, message) {
+        window.showAlertModal = function(title, message) {
             playClickSound();
             const overlay = document.getElementById('custom-modal');
             document.getElementById('modal-title').textContent = title;
             document.getElementById('modal-message').textContent = message;
-            
             const btnContainer = document.getElementById('modal-buttons');
             btnContainer.innerHTML = '';
-
             const okBtn = document.createElement('button');
             okBtn.className = 'modal-btn primary';
             okBtn.textContent = "OK";
-            okBtn.type = "button";
             okBtn.onclick = () => { playClickSound(); overlay.classList.remove('open'); };
             btnContainer.appendChild(okBtn);
-
             overlay.classList.add('open');
-        }
+        };
 
-        // Gestion du menu burger
-        document.getElementById('burger-toggle-btn').addEventListener('click', () => {
+        window.toggleBurgerMenu = function() {
             playClickSound();
             document.getElementById('burger-dropdown').classList.toggle('open');
-        });
+        };
 
-        // Anti-mise en veille (Wake Lock API)
+        // Anti-mise en veille
         let wakeLock = null;
         async function requestWakeLock() {
             if ('wakeLock' in navigator) {
-                try {
-                    wakeLock = await navigator.wakeLock.request('screen');
-                } catch (err) {}
+                try { wakeLock = await navigator.wakeLock.request('screen'); } catch (err) {}
             }
         }
         document.addEventListener('visibilitychange', async () => {
-            if (wakeLock !== null && document.visibilityState === 'visible') {
-                await requestWakeLock();
-            }
+            if (wakeLock !== null && document.visibilityState === 'visible') { await requestWakeLock(); }
         });
 
-        // Générateur d'avatar cartoon auto (via DiceBear)
         function getCartoonAvatarUrl(seed) {
             const safeSeed = seed && seed.trim() !== "" ? seed.trim() : "player";
             return `https://api.dicebear.com/7.x/bottts/svg?seed=${encodeURIComponent(safeSeed)}`;
         }
 
-        const nameInputEl = document.getElementById('player-name-input');
-        nameInputEl.addEventListener('input', () => {
-            const url = getCartoonAvatarUrl(nameInputEl.value);
+        window.updateCartoonAvatar = function() {
+            const name = document.getElementById('player-name-input').value;
+            const url = getCartoonAvatarUrl(name);
             document.getElementById('preview-avatar').style.backgroundImage = `url('${url}')`;
-        });
-        document.getElementById('preview-avatar').style.backgroundImage = `url('${getCartoonAvatarUrl("")}')`;
+        };
+        window.updateCartoonAvatar();
 
         const playerColors = ["#ff007f", "#7928ca", "#22c55e", "#3b82f6", "#eab308", "#ef4444", "#06b6d4", "#ec4899", "#8b5cf6"];
         let assignedColor = playerColors[Math.floor(Math.random() * playerColors.length)];
-
         let playerId = localStorage.getItem('blindtest_player_id') || 'player_' + Math.random().toString(36.2).substring(2, 9);
         localStorage.setItem('blindtest_player_id', playerId);
 
-        // Connexion au jeu
-        document.getElementById('btn-join-game').addEventListener('click', () => {
+        window.joinGame = function() {
             playClickSound();
-            const nameInput = nameInputEl.value.trim();
+            const nameInput = document.getElementById('player-name-input').value.trim();
             if (!nameInput) {
                 showAlertModal("Attention", "Veuillez entrer un pseudo !");
                 return;
@@ -740,9 +717,9 @@
 
                 listenToGameState();
                 listenToPersonalScore();
-                renderFavorites();
+                window.renderFavorites();
             });
-        });
+        };
 
         function listenToPersonalScore() {
             onValue(ref(db, 'players/' + playerId), (snapshot) => {
@@ -753,10 +730,8 @@
             });
         }
 
-        // --- GESTION DU MODE MAÎTRE DU JEU (ADMIN) ---
-        let gameHasStartedMaster = false;
-
-        document.getElementById('btn-open-admin').addEventListener('click', () => {
+        // --- GESTION ADMIN ---
+        window.promptAdminPassword = function() {
             playClickSound();
             const overlay = document.getElementById('custom-modal');
             document.getElementById('modal-title').textContent = "Accès Maître du jeu";
@@ -768,14 +743,12 @@
             const cancelBtn = document.createElement('button');
             cancelBtn.className = 'modal-btn';
             cancelBtn.textContent = "Annuler";
-            cancelBtn.type = "button";
             cancelBtn.onclick = () => { playClickSound(); overlay.classList.remove('open'); };
             btnContainer.appendChild(cancelBtn);
 
             const valBtn = document.createElement('button');
             valBtn.className = 'modal-btn primary';
             valBtn.textContent = "Valider";
-            valBtn.type = "button";
             valBtn.onclick = () => {
                 playClickSound();
                 const pwd = document.getElementById('admin-pwd-input').value;
@@ -790,31 +763,28 @@
                 }
             };
             btnContainer.appendChild(valBtn);
-
             overlay.classList.add('open');
-        });
+        };
 
-        // Objectif de points
-        document.querySelectorAll('.target-btn').forEach(btn => {
-            btn.addEventListener('click', () => {
-                playClickSound();
-                const score = parseInt(btn.getAttribute('data-score'));
-                set(ref(db, 'gameState/targetScore'), score);
-                document.querySelectorAll('.target-btn').forEach(b => b.classList.remove('active'));
-                btn.classList.add('active');
-            });
-        });
-
-        // Gros bouton bas de l'écran (Démarrer / Morceau suivant) synchronisé sur nextSong comme l'iPad l'attend
-        document.getElementById('master-main-btn').addEventListener('click', () => {
+        window.setTargetScore = function(score) {
             playClickSound();
-            gameHasStartedMaster = true;
+            set(ref(db, 'gameState/targetScore'), score);
+            [150, 200, 250, 300].forEach(val => {
+                const btn = document.getElementById(`btn-${val}`);
+                if (val === score) { btn.classList.add('active'); } else { btn.classList.remove('active'); }
+            });
+        };
+
+        window.handleMasterAction = function() {
+            playClickSound();
             document.getElementById('master-main-btn').textContent = "Morceau suivant";
             document.getElementById('master-main-btn').style.background = "#7928ca";
+            // Écrit sur TOUTES les clés possibles pour être sûr que la TV capte l'ordre
             set(ref(db, 'gameState/nextSong'), Date.now());
-        });
+            set(ref(db, 'gameState/remoteAction'), { type: 'next', timestamp: Date.now() });
+        };
 
-        document.getElementById('btn-reset-scores').addEventListener('click', () => {
+        window.masterResetScores = function() {
             playClickSound();
             get(ref(db, 'players')).then((snapshot) => {
                 const players = snapshot.val();
@@ -826,90 +796,75 @@
                 }
             });
             document.getElementById('burger-dropdown').classList.remove('open');
-        });
+        };
 
-        document.getElementById('btn-relaunch-game').addEventListener('click', () => {
+        window.masterRelandGame = function() {
             playClickSound();
-            gameHasStartedMaster = true;
             document.getElementById('master-main-btn').textContent = "Morceau suivant";
             document.getElementById('master-main-btn').style.background = "#7928ca";
             set(ref(db, 'gameState/nextSong'), Date.now());
+            set(ref(db, 'gameState/remoteAction'), { type: 'relaunch', timestamp: Date.now() });
             showAlertModal("Partie", "Nouvelle partie lancée !");
             document.getElementById('burger-dropdown').classList.remove('open');
-        });
+        };
 
-        document.getElementById('btn-stop-game').addEventListener('click', () => {
+        window.masterStopGame = function() {
             playClickSound();
-            gameHasStartedMaster = false;
             document.getElementById('master-main-btn').textContent = "Démarrer la partie";
             document.getElementById('master-main-btn').style.background = "#22c55e";
             set(ref(db, 'gameState/status'), 'stopped');
+            set(ref(db, 'gameState/remoteAction'), { type: 'stop', timestamp: Date.now() });
             showAlertModal("Partie", "Partie arrêtée.");
             document.getElementById('burger-dropdown').classList.remove('open');
-        });
+        };
 
-        // --- FAVORIS ET RECHERCHE ADMIN ---
+        // --- FAVORIS ---
         const defaultFavorites = ["variete francaise", "annees 80", "rock", "disney", "hits 2024"];
-        
         function getFavorites() {
             let saved = localStorage.getItem('blindtest_favs');
             return saved ? JSON.parse(saved) : defaultFavorites;
         }
-
         function saveFavorites(favs) {
             localStorage.setItem('blindtest_favs', JSON.stringify(favs));
-            renderFavorites();
+            window.renderFavorites();
         }
 
-        function renderFavorites() {
+        window.renderFavorites = function() {
             const container = document.getElementById('favorites-list');
             if (!container) return;
             const favs = getFavorites();
             container.innerHTML = '';
-
             favs.forEach(fav => {
                 const pill = document.createElement('div');
                 pill.className = 'fav-pill';
-                
-                const spanText = document.createElement('span');
-                spanText.textContent = fav;
-                spanText.addEventListener('click', () => {
-                    playClickSound();
-                    document.getElementById('burger-search-input').value = fav;
-                    searchFromBurger();
-                });
-
-                const spanDel = document.createElement('span');
-                spanDel.className = 'delete-fav';
-                spanDel.textContent = "✕";
-                spanDel.addEventListener('click', (e) => {
-                    e.stopPropagation();
-                    playClickSound();
-                    let fList = getFavorites();
-                    fList = fList.filter(f => f !== fav);
-                    saveFavorites(fList);
-                });
-
-                pill.appendChild(spanText);
-                pill.appendChild(spanDel);
+                pill.innerHTML = `<span onclick="selectFavorite('${fav}')">${fav}</span><span class="delete-fav" onclick="removeFavorite('${fav}', event)">✕</span>`;
                 container.appendChild(pill);
             });
-        }
+        };
 
-        function searchFromBurger() {
+        window.selectFavorite = function(fav) {
+            playClickSound();
+            document.getElementById('burger-search-input').value = fav;
+            window.searchFromBurger();
+        };
+
+        window.removeFavorite = function(fav, event) {
+            event.stopPropagation();
+            playClickSound();
+            let favs = getFavorites().filter(f => f !== fav);
+            saveFavorites(favs);
+        };
+
+        window.searchFromBurger = function() {
+            playClickSound();
             const query = document.getElementById('burger-search-input').value.trim();
             if (!query) return;
             set(ref(db, 'gameState/remoteQuery'), query);
             showAlertModal("Recherche", `Playlist "${query}" transmise à la TV.`);
             document.getElementById('burger-dropdown').classList.remove('open');
-        }
+        };
 
-        document.getElementById('btn-search-burger').addEventListener('click', () => {
-            playClickSound();
-            searchFromBurger();
-        });
-
-        document.getElementById('btn-add-fav').addEventListener('click', () => {
+        window.addCurrentQueryToFavorites = function() {
             playClickSound();
             const query = document.getElementById('burger-search-input').value.trim();
             if (!query) {
@@ -924,52 +879,41 @@
             } else {
                 showAlertModal("Information", "Déjà dans les favoris.");
             }
-        });
+        };
 
         function listenToGameState() {
             onValue(ref(db, 'gameState'), (snapshot) => {
                 const state = snapshot.val();
                 const board = document.getElementById('game-board-content');
-                
                 if (!state || state.status !== 'playing') {
                     board.innerHTML = `<div class="waiting-message">En attente du lancement du morceau...</div>`;
                     return;
                 }
 
                 const choiceColors = ["#7928ca", "#3b82f6", "#22c55e", "#eab308"];
-
                 let html = `<div class="timer-circle" id="live-timer">${state.timeLeft || 15}</div>`;
                 html += `<div class="choices-grid">`;
-                
                 state.choices.forEach((choice, index) => {
                     const btnColor = choiceColors[index % choiceColors.length];
-                    html += `<button class="choice-btn" id="choice-${index}" style="background-color: ${btnColor};" data-index="${index}">${choice}</button>`;
+                    html += `<button class="choice-btn" id="choice-${index}" style="background-color: ${btnColor};" onclick="makeChoice(${index})">${choice}</button>`;
                 });
-                
                 html += `</div>`;
                 board.innerHTML = html;
-
-                document.querySelectorAll('.choice-btn').forEach(btn => {
-                    btn.addEventListener('click', (e) => {
-                        playClickSound();
-                        const idx = parseInt(e.currentTarget.getAttribute('data-index'));
-                        makeChoice(idx, e.currentTarget);
-                    });
-                });
             });
         }
 
-        function makeChoice(choiceIndex, clickedBtn) {
+        window.makeChoice = function(choiceIndex) {
+            playClickSound();
             const buttons = document.querySelectorAll('.choice-btn');
             buttons.forEach(btn => btn.disabled = true);
-            
+            const clickedBtn = document.getElementById(`choice-${choiceIndex}`);
             if (clickedBtn) clickedBtn.classList.add('selected');
 
             update(ref(db, 'players/' + playerId), {
                 answered: true,
                 lastChoice: choiceIndex
             });
-        }
+        };
     </script>
 </body>
 </html>
