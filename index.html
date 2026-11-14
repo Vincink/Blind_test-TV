@@ -81,7 +81,9 @@
             background: #151b2b;
             border: 1px solid rgba(255, 255, 255, 0.15);
             border-radius: 14px;
-            width: 280px;
+            width: 320px;
+            max-height: 85vh;
+            overflow-y: auto;
             padding: 20px;
             box-shadow: 0 15px 35px rgba(0,0,0,0.6);
             display: none;
@@ -97,7 +99,7 @@
         .menu-item {
             display: flex;
             flex-direction: column;
-            gap: 6px;
+            gap: 8px;
         }
 
         .menu-item label {
@@ -106,14 +108,83 @@
             font-weight: 500;
         }
 
-        .menu-item input {
+        .menu-search-input {
             padding: 8px 12px;
             border-radius: 8px;
             border: 1px solid rgba(255,255,255,0.2);
             background: rgba(0,0,0,0.3);
             color: white;
-            font-size: 1rem;
+            font-size: 0.9rem;
             outline: none;
+            width: 100%;
+        }
+
+        .score-target-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 8px;
+        }
+
+        .target-btn {
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            color: white;
+            padding: 8px;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-align: center;
+        }
+
+        .target-btn:hover:not(:disabled) {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .target-btn.active {
+            background: #7928ca;
+            border-color: #ff007f;
+            box-shadow: 0 0 10px rgba(121, 40, 202, 0.5);
+        }
+
+        .target-btn:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+
+        .favorites-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            max-height: 120px;
+            overflow-y: auto;
+            padding: 2px;
+        }
+
+        .fav-pill {
+            background: rgba(121, 40, 202, 0.25);
+            border: 1px solid rgba(121, 40, 202, 0.5);
+            color: #fff;
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            transition: background 0.2s;
+        }
+
+        .fav-pill:hover {
+            background: rgba(121, 40, 202, 0.6);
+        }
+
+        .fav-pill .delete-fav {
+            font-size: 0.7rem;
+            color: #ff6b6b;
+            cursor: pointer;
+            margin-left: 4px;
         }
 
         .menu-divider {
@@ -148,6 +219,103 @@
             background: rgba(255, 107, 107, 0.15);
         }
 
+        /* Modale personnalisée stylisée */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(11, 15, 25, 0.8);
+            backdrop-filter: blur(5px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.2s ease;
+        }
+
+        .modal-overlay.open {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .modal-card {
+            background: #151b2b;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 16px;
+            padding: 30px;
+            width: 400px;
+            max-width: 90%;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.6);
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            text-align: center;
+            transform: scale(0.95);
+            transition: transform 0.2s ease;
+        }
+
+        .modal-overlay.open .modal-card {
+            transform: scale(1);
+        }
+
+        .modal-title {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: #ffffff;
+        }
+
+        .modal-message {
+            font-size: 0.95rem;
+            color: #a0aec0;
+            line-height: 1.4;
+        }
+
+        .modal-buttons {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-top: 5px;
+        }
+
+        .modal-btn {
+            flex: 1;
+            padding: 10px 16px;
+            border-radius: 10px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            cursor: pointer;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            background: rgba(255, 255, 255, 0.08);
+            color: white;
+            transition: background 0.2s;
+        }
+
+        .modal-btn:hover {
+            background: rgba(255, 255, 255, 0.15);
+        }
+
+        .modal-btn.primary {
+            background: #7928ca;
+            border-color: #ff007f;
+        }
+
+        .modal-btn.primary:hover {
+            background: #8e35e6;
+        }
+
+        .modal-btn.danger {
+            background: #e53e3e;
+            border-color: #f56565;
+        }
+
+        .modal-btn.danger:hover {
+            background: #f56565;
+        }
+
         main {
             flex: 1;
             display: grid;
@@ -155,6 +323,7 @@
             padding: 30px;
             gap: 30px;
             position: relative;
+            overflow: hidden;
         }
 
         .left-zone {
@@ -242,6 +411,16 @@
             position: relative;
         }
 
+        .track-info-preview {
+            margin-bottom: 15px;
+            font-size: 1.4rem;
+            color: #ffffff;
+            font-weight: 700;
+            text-align: center;
+            min-height: 35px;
+            text-shadow: 0 2px 10px rgba(0,0,0,0.5);
+        }
+
         .vinyl-container {
             position: relative;
             width: 200px;
@@ -318,17 +497,6 @@
             line-height: 1;
         }
 
-        /* Révélation du titre et de l'artiste replacée proprement au centre */
-        .track-info-preview {
-            margin-top: 10px;
-            font-size: 1.4rem;
-            color: #ffffff;
-            font-weight: 700;
-            text-align: center;
-            min-height: 40px;
-            text-shadow: 0 2px 10px rgba(0,0,0,0.5);
-        }
-
         .right-zone {
             background: rgba(255, 255, 255, 0.03);
             border: 1px solid rgba(255, 255, 255, 0.08);
@@ -337,6 +505,9 @@
             display: flex;
             flex-direction: column;
             height: 100%;
+            max-height: calc(100vh - 120px);
+            position: relative;
+            overflow: hidden;
         }
 
         .right-header-bar {
@@ -346,12 +517,11 @@
             margin-bottom: 15px;
             padding-bottom: 10px;
             border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-            gap: 10px;
+            flex-shrink: 0;
         }
 
         .right-header-bar h2 {
             font-size: 1.05rem;
-            white-space: nowrap;
         }
 
         .players-count {
@@ -362,48 +532,86 @@
             font-weight: bold;
         }
 
-        .compact-action-btn {
+        .bottom-action-btn {
+            position: absolute;
+            bottom: 30px;
+            right: 80px;
             background: #22c55e;
             color: white;
             border: none;
-            padding: 6px 12px;
-            border-radius: 8px;
-            font-size: 0.85rem;
+            padding: 14px 28px;
+            border-radius: 14px;
+            font-size: 1.1rem;
             font-weight: bold;
             cursor: pointer;
-            transition: background 0.2s, transform 0.1s;
-            white-space: nowrap;
-            box-shadow: 0 4px 12px rgba(34, 197, 94, 0.3);
+            box-shadow: 0 10px 25px rgba(34, 197, 94, 0.4);
+            transition: transform 0.1s, background 0.2s, opacity 0.2s;
+            z-index: 20;
         }
 
-        .compact-action-btn.playing-state {
+        .bottom-action-btn.playing-state {
             background: #7928ca;
-            box-shadow: 0 4px 12px rgba(121, 40, 202, 0.3);
+            box-shadow: 0 10px 25px rgba(121, 40, 202, 0.4);
         }
 
-        .compact-action-btn:hover {
-            transform: scale(1.02);
+        .bottom-action-btn:hover:not(:disabled) {
+            transform: scale(1.03);
         }
 
-        .players-list {
+        .bottom-action-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .players-container {
             flex: 1;
-            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            overflow: hidden;
+            padding-bottom: 70px;
+        }
+
+        .top-three-list {
             display: flex;
             flex-direction: column;
             gap: 10px;
-            padding-right: 5px;
+            flex-shrink: 0;
         }
 
-        /* Masquage rigoureux de la poubelle par défaut (overflow hidden) */
+        .scrollable-players-wrapper {
+            flex: 1;
+            overflow: hidden;
+            position: relative;
+            border-top: 1px dashed rgba(255, 255, 255, 0.15);
+            padding-top: 10px;
+        }
+
+        .scrollable-players-inner {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            position: absolute;
+            width: 100%;
+            animation: smoothMarquee 12s ease-in-out infinite alternate;
+        }
+
+        @keyframes smoothMarquee {
+            0% { transform: translateY(0); }
+            100% { transform: translateY(calc(-100% + 150px)); }
+        }
+
         .player-row-wrapper {
             position: relative;
             overflow: hidden;
-            border-radius: 12px;
+            border-radius: 14px;
+            flex-shrink: 0;
         }
 
         .player-delete-action {
             position: absolute;
-            right: 0;
+            right: -80px;
             top: 0;
             bottom: 0;
             width: 80px;
@@ -414,20 +622,26 @@
             color: white;
             font-size: 1.2rem;
             cursor: pointer;
-            border-top-right-radius: 12px;
-            border-bottom-right-radius: 12px;
+            border-top-right-radius: 14px;
+            border-bottom-right-radius: 14px;
+            transition: right 0.2s ease;
             z-index: 1;
+        }
+
+        .player-row-wrapper.swiped .player-delete-action {
+            right: 0;
         }
 
         .player-pill {
             position: relative;
             display: flex;
             align-items: center;
-            padding: 12px 15px;
-            border-radius: 12px;
-            background: rgba(255, 255, 255, 0.05);
+            padding: 10px 15px;
+            border-radius: 14px;
+            background: rgba(25, 30, 45, 0.9);
             transition: transform 0.2s ease;
-            border-left: 6px solid #ccc;
+            border: 2.5px solid var(--player-color);
+            box-shadow: 0 0 15px 2px var(--player-glow);
             z-index: 2;
             touch-action: pan-y;
         }
@@ -440,12 +654,12 @@
             font-weight: 800;
             font-size: 1.1rem;
             width: 30px;
-            color: #a0aec0;
+            color: #ffffff;
         }
 
         .player-avatar {
-            width: 36px;
-            height: 36px;
+            width: 34px;
+            height: 34px;
             border-radius: 50%;
             background-size: cover;
             background-position: center;
@@ -463,6 +677,35 @@
         .player-name {
             font-weight: 600;
             font-size: 1rem;
+            color: #ffffff;
+        }
+
+        .points-badge {
+            background: rgba(0, 0, 0, 0.85);
+            padding: 3px 8px;
+            border-radius: 12px;
+            font-weight: 900;
+            font-size: 0.95rem;
+            border: 2px solid var(--player-color);
+            color: var(--player-color);
+            box-shadow: 0 0 12px var(--player-color);
+            margin-right: 12px;
+            animation: longFadeShow 9s ease-out forwards;
+            z-index: 5;
+        }
+
+        .points-badge.penalty {
+            border-color: #ef4444;
+            color: #ef4444;
+            box-shadow: 0 0 12px rgba(239, 68, 68, 0.8);
+        }
+
+        @keyframes longFadeShow {
+            0% { opacity: 0; transform: scale(0.6); }
+            8% { opacity: 1; transform: scale(1.05); }
+            15% { transform: scale(1); }
+            85% { opacity: 1; }
+            100% { opacity: 0; transform: translateY(-5px); }
         }
 
         .player-score {
@@ -479,23 +722,63 @@
         <div class="header-right">
             <!-- Menu Burger -->
             <div class="burger-container">
-                <div class="burger-btn" onclick="toggleBurgerMenu()">
+                <div class="burger-btn" onclick="playClickSound(); toggleBurgerMenu();">
                     <span></span>
                     <span></span>
                     <span></span>
                 </div>
                 <div class="burger-menu" id="burger-dropdown">
+                    <!-- Objectif de points -->
                     <div class="menu-item">
-                        <label for="target-input">Objectif de points :</label>
-                        <input type="number" id="target-input" value="150" min="50" step="10" onchange="updateTargetScore(this.value)">
+                        <label>Objectif de points :</label>
+                        <div class="score-target-grid">
+                            <button class="target-btn active" id="btn-150" onclick="playClickSound(); setTargetScore(150)">150 pts</button>
+                            <button class="target-btn" id="btn-200" onclick="playClickSound(); setTargetScore(200)">200 pts</button>
+                            <button class="target-btn" id="btn-250" onclick="playClickSound(); setTargetScore(250)">250 pts</button>
+                            <button class="target-btn" id="btn-300" onclick="playClickSound(); setTargetScore(300)">300 pts</button>
+                        </div>
                     </div>
+
                     <div class="menu-divider"></div>
-                    <button class="menu-action-btn" onclick="resetGameKeepPlayers(); toggleBurgerMenu();">🔄 Relancer (garder joueurs)</button>
-                    <button class="menu-action-btn danger" onclick="removeAllPlayers(); toggleBurgerMenu();">🗑️ Supprimer tous les joueurs</button>
+
+                    <!-- Recherche iTunes intégrée au menu -->
+                    <div class="menu-item">
+                        <label>Rechercher une playlist :</label>
+                        <input type="text" id="burger-search-input" class="menu-search-input" placeholder="Ex: rock, 80s, Goldman...">
+                        <button class="menu-action-btn" style="padding: 8px; font-size: 0.85rem; text-align: center; margin-top: 4px;" onclick="playClickSound(); searchFromBurger()">Charger cette recherche</button>
+                    </div>
+
+                    <div class="menu-divider"></div>
+
+                    <!-- Gestion des Playlists Favorites -->
+                    <div class="menu-item">
+                        <label>Playlists favorites :</label>
+                        <div class="favorites-container" id="favorites-list"></div>
+                        <button class="menu-action-btn" style="font-size: 0.8rem; padding: 6px; text-align: center; margin-top: 2px;" onclick="playClickSound(); addCurrentQueryToFavorites()">Ajouter la recherche actuelle</button>
+                    </div>
+
+                    <div class="menu-divider"></div>
+
+                    <!-- Contrôles de partie -->
+                    <button class="menu-action-btn" onclick="playClickSound(); confirmResetScores(); toggleBurgerMenu();">Remettre les scores à 0</button>
+                    <button class="menu-action-btn" onclick="playClickSound(); confirmStopGame(); toggleBurgerMenu();">Arrêter la partie</button>
+                    <button class="menu-action-btn" onclick="playClickSound(); resetGameKeepPlayers(); toggleBurgerMenu();">Relancer (garder joueurs)</button>
+                    <button class="menu-action-btn danger" onclick="playClickSound(); confirmRemoveAllPlayers(); toggleBurgerMenu();">Supprimer tous les joueurs</button>
                 </div>
             </div>
         </div>
     </header>
+
+    <!-- Modale de dialogue personnalisée -->
+    <div class="modal-overlay" id="custom-modal">
+        <div class="modal-card">
+            <div class="modal-title" id="modal-title">Confirmation</div>
+            <div class="modal-message" id="modal-message">Êtes-vous sûr de vouloir faire cela ?</div>
+            <div class="modal-buttons" id="modal-buttons">
+                <!-- Boutons injectés dynamiquement -->
+            </div>
+        </div>
+    </div>
 
     <main>
         <div class="left-zone" id="qr-container">
@@ -505,11 +788,14 @@
             
             <div class="itunes-search-box">
                 <input type="text" id="itunes-query" placeholder="Recherche iTunes..." value="variete francaise">
-                <button class="compact-action-btn" style="padding: 8px; font-size: 0.85rem; width: 100%;" onclick="fetchItunesPlaylist()">Charger les titres</button>
+                <button class="menu-action-btn" style="padding: 8px; font-size: 0.85rem; width: 100%; text-align: center;" onclick="playClickSound(); fetchItunesPlaylist()">Charger les titres</button>
             </div>
         </div>
 
         <div class="center-zone">
+            <!-- Titre et artiste au-dessus du disque -->
+            <div class="track-info-preview" id="track-info-preview"></div>
+
             <div class="vinyl-container">
                 <div class="vinyl" id="vinyl-disc">
                     <div class="vinyl-label" id="vinyl-label-text">BLIND TEST</div>
@@ -521,8 +807,6 @@
                 <div class="counter-wrapper">
                     <div class="big-counter" id="big-counter">--</div>
                 </div>
-                <!-- Révélation déplacée et centrée ici -->
-                <div class="track-info-preview" id="track-info-preview"></div>
             </div>
 
             <!-- Lecteur Audio HTML5 pour l'API iTunes -->
@@ -531,17 +815,26 @@
 
         <div class="right-zone">
             <div class="right-header-bar">
-                <div style="display: flex; align-items: center; gap: 8px;">
-                    <h2>Joueurs connectés</h2>
-                    <span class="players-count" id="player-count">0</span>
-                </div>
-                <button class="compact-action-btn" id="start-btn" onclick="startNextRound()">
-                    <span id="start-btn-text">Démarrer la partie</span>
-                </button>
+                <h2>Joueurs connectés</h2>
+                <span class="players-count" id="player-count">0</span>
             </div>
-            <div class="players-list" id="players-list"></div>
+            
+            <div class="players-container">
+                <!-- Top 3 épinglé en haut -->
+                <div class="top-three-list" id="top-three-container"></div>
+
+                <!-- Reste de la liste avec défilement fluide automatique -->
+                <div class="scrollable-players-wrapper" id="scroll-wrapper" style="display: none;">
+                    <div class="scrollable-players-inner" id="scrollable-container"></div>
+                </div>
+            </div>
         </div>
     </main>
+
+    <!-- Bouton d'action unique décalé à droite -->
+    <button class="bottom-action-btn" id="start-btn" onclick="playClickSound(); startNextRound()">
+        <span id="start-btn-text">Démarrer la partie</span>
+    </button>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
@@ -568,21 +861,160 @@
         window.dbGet = get;
         window.dbRemove = remove;
 
-        let winningScore = 150;
+        window.winningScore = 150;
+        window.gameOverTriggered = false;
+
+        // Générateur de son de clic discret via Web Audio API
+        window.playClickSound = function() {
+            try {
+                const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(600, audioCtx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(200, audioCtx.currentTime + 0.04);
+                
+                gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.04);
+                
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                
+                osc.start();
+                osc.stop(audioCtx.currentTime + 0.04);
+            } catch(e) {
+                // Ignore si l'audio context est bloqué avant interaction
+            }
+        };
 
         window.toggleBurgerMenu = function() {
             const dropdown = document.getElementById('burger-dropdown');
             dropdown.classList.toggle('open');
-        };
-
-        window.updateTargetScore = function(val) {
-            winningScore = parseInt(val) || 150;
-        };
-
-        window.removeAllPlayers = function() {
-            if (confirm("Voulez-vous vraiment supprimer TOUS les joueurs ?")) {
-                remove(ref(db, 'players'));
+            if (dropdown.classList.contains('open')) {
+                const mainInput = document.getElementById('itunes-query');
+                const burgerInput = document.getElementById('burger-search-input');
+                if (mainInput && burgerInput) burgerInput.value = mainInput.value;
             }
+        };
+
+        window.showModal = function(title, message, type, onConfirm) {
+            const overlay = document.getElementById('custom-modal');
+            document.getElementById('modal-title').textContent = title;
+            document.getElementById('modal-message').textContent = message;
+            
+            const btnContainer = document.getElementById('modal-buttons');
+            btnContainer.innerHTML = '';
+
+            const cancelBtn = document.createElement('button');
+            cancelBtn.className = 'modal-btn';
+            cancelBtn.textContent = "Annuler";
+            cancelBtn.onclick = () => { playClickSound(); overlay.classList.remove('open'); };
+            btnContainer.appendChild(cancelBtn);
+
+            const confirmBtn = document.createElement('button');
+            confirmBtn.className = `modal-btn ${type === 'danger' ? 'danger' : 'primary'}`;
+            confirmBtn.textContent = "Confirmer";
+            confirmBtn.onclick = () => {
+                playClickSound();
+                overlay.classList.remove('open');
+                if (onConfirm) onConfirm();
+            };
+            btnContainer.appendChild(confirmBtn);
+
+            overlay.classList.add('open');
+        };
+
+        window.showAlertModal = function(title, message) {
+            const overlay = document.getElementById('custom-modal');
+            document.getElementById('modal-title').textContent = title;
+            document.getElementById('modal-message').textContent = message;
+            
+            const btnContainer = document.getElementById('modal-buttons');
+            btnContainer.innerHTML = '';
+
+            const okBtn = document.createElement('button');
+            okBtn.className = 'modal-btn primary';
+            okBtn.textContent = "OK";
+            okBtn.onclick = () => { playClickSound(); overlay.classList.remove('open'); };
+            btnContainer.appendChild(okBtn);
+
+            overlay.classList.add('open');
+        };
+
+        window.setTargetScore = function(score) {
+            if (window.gameHasStarted || window.roundActiveLoop) return;
+            
+            window.winningScore = score;
+            
+            [150, 200, 250, 300].forEach(val => {
+                const btn = document.getElementById(`btn-${val}`);
+                if (val === score) {
+                    btn.classList.add('active');
+                } else {
+                    btn.classList.remove('active');
+                }
+            });
+        };
+
+        window.updateTargetScoreUI = function() {
+            const disable = window.gameHasStarted || window.roundActiveLoop;
+            [150, 200, 250, 300].forEach(val => {
+                const btn = document.getElementById(`btn-${val}`);
+                if (btn) btn.disabled = disable;
+            });
+        };
+
+        window.confirmResetScores = function() {
+            window.showModal("Remettre les scores à zéro", "Voulez-vous remettre tous les scores à 0 ?", "primary", () => {
+                if (window.dbInstance && window.dbRef && window.dbGet && window.dbUpdate) {
+                    window.dbGet(window.dbRef(window.dbInstance, 'players')).then((snapshot) => {
+                        const players = snapshot.val();
+                        if (players) {
+                            Object.keys(players).forEach(playerId => {
+                                window.dbUpdate(window.dbRef(window.dbInstance, 'players/' + playerId), {
+                                    score: 0,
+                                    answered: false,
+                                    lastChoice: null,
+                                    lastEarnedPoints: 0
+                                });
+                            });
+                        }
+                    });
+                }
+            });
+        };
+
+        window.confirmStopGame = function() {
+            window.showModal("Arrêter la partie", "Voulez-vous vraiment arrêter la partie en cours ?", "danger", () => {
+                const audioElem = document.getElementById('audio-player');
+                if (audioElem) audioElem.pause();
+                document.getElementById('vinyl-disc').classList.remove('playing');
+                
+                window.roundActiveLoop = false;
+                window.gameHasStarted = false;
+                window.gameOverTriggered = false;
+                window.updateTargetScoreUI();
+
+                // RESTAURATION DE LA PREMIÈRE PAGE (Affichage du panneau de gauche complet)
+                document.getElementById('qr-container').classList.remove('minimized');
+
+                document.getElementById('status-label').textContent = "Charge les morceaux puis clique sur Démarrer";
+                document.getElementById('big-counter').textContent = "--";
+                document.getElementById('track-info-preview').textContent = "";
+                
+                const startBtn = document.getElementById('start-btn');
+                document.getElementById('start-btn-text').textContent = "Démarrer la partie";
+                startBtn.disabled = false;
+                startBtn.classList.remove('playing-state');
+                startBtn.onclick = () => { playClickSound(); startNextRound(); };
+            });
+        };
+
+        window.confirmRemoveAllPlayers = function() {
+            window.showModal("Suppression des joueurs", "Voulez-vous vraiment supprimer TOUS les joueurs ?", "danger", () => {
+                remove(ref(db, 'players'));
+            });
         };
 
         const mobileUrl = "https://vincink.github.io/Blind_test-TV/mobile.html"; 
@@ -591,17 +1023,20 @@
             <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(mobileUrl)}" alt="QR Code Mobile">
         `;
 
-        let gameOverTriggered = false;
-
         const playersRef = ref(db, 'players');
         onValue(playersRef, (snapshot) => {
             const data = snapshot.val();
-            const listContainer = document.getElementById('players-list');
-            listContainer.innerHTML = '';
+            const topContainer = document.getElementById('top-three-container');
+            const scrollWrapper = document.getElementById('scroll-wrapper');
+            const scrollableContainer = document.getElementById('scrollable-container');
+            
+            topContainer.innerHTML = '';
+            scrollableContainer.innerHTML = '';
 
             if (!data) {
                 document.getElementById('player-count').textContent = '0';
-                listContainer.innerHTML = '<div style="color: #a0aec0; text-align: center; margin-top: 20px;">En attente de joueurs</div>';
+                topContainer.innerHTML = '<div style="color: #a0aec0; text-align: center; margin-top: 20px;">En attente de joueurs</div>';
+                scrollWrapper.style.display = 'none';
                 return;
             }
 
@@ -613,60 +1048,83 @@
             playersArray.sort((a, b) => (b.score || 0) - (a.score || 0));
             document.getElementById('player-count').textContent = playersArray.length;
 
-            playersArray.forEach((player, index) => {
-                if ((player.score || 0) >= winningScore && !gameOverTriggered) {
-                    gameOverTriggered = true;
-                    setTimeout(() => {
-                        if (window.roundActiveLoop) return;
-                        document.getElementById('status-label').textContent = `🏆 Victoire éclatante de ${player.name} !`;
-                        document.getElementById('big-counter').textContent = `${winningScore}+`;
-                        document.getElementById('start-btn-text').textContent = "Nouvelle partie";
-                        document.getElementById('start-btn').onclick = resetGameKeepPlayers;
-                    }, 500);
+            const topThree = playersArray.slice(0, 3);
+            const restOfPlayers = playersArray.slice(3);
+
+            const createPlayerHTML = (player, index) => {
+                const pColor = player.color || '#7928ca';
+                let glowColor = 'rgba(121, 40, 202, 0.85)';
+                if (pColor.startsWith('#') && pColor.length === 7) {
+                    let r = parseInt(pColor.slice(1, 3), 16);
+                    let g = parseInt(pColor.slice(3, 5), 16);
+                    let b = parseInt(pColor.slice(5, 7), 16);
+                    glowColor = `rgba(${r}, ${g}, ${b}, 0.85)`;
+                }
+
+                let pointsBadgeHTML = '';
+                if (player.lastEarnedPoints !== undefined && player.lastEarnedPoints !== null && player.lastEarnedPoints !== 0) {
+                    if (player.lastEarnedPoints > 0) {
+                        pointsBadgeHTML = `<div class="points-badge">+${player.lastEarnedPoints}</div>`;
+                    } else {
+                        pointsBadgeHTML = `<div class="points-badge penalty">${player.lastEarnedPoints}</div>`;
+                    }
                 }
 
                 const wrapper = document.createElement('div');
                 wrapper.className = 'player-row-wrapper';
-                
                 wrapper.innerHTML = `
-                    <div class="player-delete-action" onclick="removePlayer('${player.id}')">
+                    <div class="player-delete-action" onclick="playClickSound(); confirmRemovePlayer('${player.id}')">
                         <i class="fa-solid fa-trash"></i>
                     </div>
-                    <div class="player-pill" id="pill-${player.id}" style="border-color: ${player.color || '#7928ca'}">
+                    <div class="player-pill" id="pill-${player.id}" style="--player-color: ${pColor}; --player-glow: ${glowColor};">
                         <div class="player-rank">#${index + 1}</div>
                         <div class="player-avatar" style="background-image: url('${player.avatar || "https://i.pravatar.cc/150?img=1"}')"></div>
                         <div class="player-info">
                             <span class="player-name">${player.name}</span>
-                            <span class="player-score" style="color: ${player.color || '#fff'}">${player.score || 0} pts</span>
+                            <div style="display: flex; align-items: center;">
+                                ${pointsBadgeHTML}
+                                <span class="player-score" style="color: ${pColor}">${player.score || 0} pts</span>
+                            </div>
                         </div>
                     </div>
                 `;
 
                 const pill = wrapper.querySelector('.player-pill');
                 let startX = 0;
-
-                pill.addEventListener('touchstart', (e) => {
-                    startX = e.touches[0].clientX;
-                });
-
+                pill.addEventListener('touchstart', (e) => { startX = e.touches[0].clientX; });
                 pill.addEventListener('touchmove', (e) => {
                     let moveX = e.touches[0].clientX;
                     let diff = moveX - startX;
                     if (diff < -20) {
+                        wrapper.classList.add('swiped');
                         pill.classList.add('swiped');
                     } else if (diff > 20) {
+                        wrapper.classList.remove('swiped');
                         pill.classList.remove('swiped');
                     }
                 });
 
-                listContainer.appendChild(wrapper);
+                return wrapper;
+            };
+
+            topThree.forEach((player, index) => {
+                topContainer.appendChild(createPlayerHTML(player, index));
             });
+
+            if (restOfPlayers.length > 0) {
+                scrollWrapper.style.display = 'block';
+                restOfPlayers.forEach((player, index) => {
+                    scrollableContainer.appendChild(createPlayerHTML(player, index + 3));
+                });
+            } else {
+                scrollWrapper.style.display = 'none';
+            }
         });
 
-        window.removePlayer = function(id) {
-            if (confirm("Supprimer ce joueur de la partie ?")) {
+        window.confirmRemovePlayer = function(id) {
+            window.showModal("Suppression", "Voulez-vous supprimer ce joueur de la partie ?", "danger", () => {
                 remove(ref(db, 'players/' + id));
-            }
+            });
         };
     </script>
 
@@ -677,9 +1135,74 @@
         let dynamicPlaylist = [];
         let playedIndices = [];
         let roundActive = false;
-        let musicTimeLeft = 15;
         window.roundActiveLoop = false;
-        let gameHasStarted = false;
+        window.gameHasStarted = false;
+        let musicTimeLeft = 15;
+        let pendingVictory = false;
+
+        const defaultFavorites = ["variete francaise", "annees 80", "rock", "disney", "hits 2024"];
+        
+        function getFavorites() {
+            let saved = localStorage.getItem('blindtest_favs');
+            return saved ? JSON.parse(saved) : defaultFavorites;
+        }
+
+        function saveFavorites(favs) {
+            localStorage.setItem('blindtest_favs', JSON.stringify(favs));
+            renderFavorites();
+        }
+
+        window.renderFavorites = function() {
+            const container = document.getElementById('favorites-list');
+            if (!container) return;
+            const favs = getFavorites();
+            container.innerHTML = '';
+
+            favs.forEach(fav => {
+                const pill = document.createElement('div');
+                pill.className = 'fav-pill';
+                pill.innerHTML = `
+                    <span onclick="playClickSound(); selectFavorite('${fav}')">${fav}</span>
+                    <span class="delete-fav" onclick="playClickSound(); removeFavorite('${fav}', event)">✕</span>
+                `;
+                container.appendChild(pill);
+            });
+        };
+
+        window.selectFavorite = function(query) {
+            document.getElementById('itunes-query').value = query;
+            document.getElementById('burger-search-input').value = query;
+            fetchItunesPlaylist();
+            toggleBurgerMenu();
+        };
+
+        window.searchFromBurger = function() {
+            const query = document.getElementById('burger-search-input').value.trim();
+            if (!query) return;
+            document.getElementById('itunes-query').value = query;
+            fetchItunesPlaylist();
+            toggleBurgerMenu();
+        };
+
+        window.addCurrentQueryToFavorites = function() {
+            const query = document.getElementById('burger-search-input').value.trim() || document.getElementById('itunes-query').value.trim();
+            if (!query) return;
+            let favs = getFavorites();
+            if (!favs.includes(query)) {
+                favs.push(query);
+                saveFavorites(favs);
+                window.showAlertModal("Succès", `"${query}" a été ajouté à vos favoris.`);
+            } else {
+                window.showAlertModal("Information", "Cette recherche est déjà dans vos favoris.");
+            }
+        };
+
+        window.removeFavorite = function(fav, event) {
+            event.stopPropagation();
+            let favs = getFavorites();
+            favs = favs.filter(f => f !== fav);
+            saveFavorites(favs);
+        };
 
         async function fetchItunesPlaylist() {
             const query = document.getElementById('itunes-query').value || "variete francaise";
@@ -692,7 +1215,7 @@
                 const validTracks = data.results.filter(track => track.previewUrl && track.trackName && track.artistName);
 
                 if (validTracks.length < 4) {
-                    alert("Pas assez de morceaux trouvés. Essaie un autre terme !");
+                    window.showAlertModal("Attention", "Pas assez de morceaux trouvés. Essaie un autre terme !");
                     return;
                 }
 
@@ -718,15 +1241,16 @@
                 });
 
                 playedIndices = [];
-                document.getElementById('status-label').textContent = `${dynamicPlaylist.length} morceaux chargés ! Prêt.`;
-                document.getElementById('big-counter').textContent = "🚀";
+                document.getElementById('status-label').textContent = `${dynamicPlaylist.length} morceaux chargés. Prêt.`;
+                document.getElementById('big-counter').textContent = "OK";
             } catch (err) {
                 console.error(err);
-                alert("Erreur lors de la connexion à l'API iTunes.");
+                window.showAlertModal("Erreur", "Erreur lors de la connexion à l'API iTunes.");
             }
         }
 
         window.addEventListener('DOMContentLoaded', () => {
+            renderFavorites();
             fetchItunesPlaylist();
         });
 
@@ -739,30 +1263,65 @@
                             window.dbUpdate(window.dbRef(window.dbInstance, 'players/' + playerId), {
                                 score: 0,
                                 answered: false,
-                                lastChoice: null
+                                lastChoice: null,
+                                lastEarnedPoints: 0
                             });
                         });
                     }
                 });
             }
             playedIndices = [];
-            gameOverTriggered = false;
-            gameHasStarted = true;
+            window.gameOverTriggered = false;
+            pendingVictory = false;
+            window.gameHasStarted = true;
+            window.updateTargetScoreUI();
             document.getElementById('start-btn-text').textContent = "Morceau suivant";
             document.getElementById('start-btn').classList.add('playing-state');
-            document.getElementById('start-btn').onclick = startNextRound;
+            document.getElementById('start-btn').onclick = () => { playClickSound(); startNextRound(); };
             startNextRound();
         }
 
+        function triggerVictorySequence() {
+            window.gameOverTriggered = true;
+            
+            if (window.dbInstance && window.dbRef && window.dbGet) {
+                window.dbGet(window.dbRef(window.dbInstance, 'players')).then((snapshot) => {
+                    const data = snapshot.val();
+                    if (data) {
+                        let playersArray = Object.keys(data).map(key => ({
+                            id: key,
+                            ...data[key]
+                        }));
+                        playersArray.sort((a, b) => (b.score || 0) - (a.score || 0));
+                        
+                        const winner = playersArray[0];
+                        document.getElementById('status-label').textContent = `Victoire éclatante de ${winner.name} !`;
+                        document.getElementById('big-counter').textContent = `${winner.score} pts`;
+                    }
+                });
+            }
+
+            document.getElementById('track-info-preview').textContent = `Partie terminée. Objectif de ${window.winningScore} atteint.`;
+            
+            const startBtn = document.getElementById('start-btn');
+            document.getElementById('start-btn-text').textContent = "Nouvelle partie";
+            startBtn.disabled = false;
+            startBtn.classList.remove('playing-state');
+            startBtn.onclick = () => { playClickSound(); resetGameKeepPlayers(); };
+        }
+
         function startNextRound() {
-            if (!gameHasStarted) {
-                gameHasStarted = true;
+            if (!window.gameHasStarted) {
+                window.gameHasStarted = true;
+                window.updateTargetScoreUI();
                 document.getElementById('start-btn-text').textContent = "Morceau suivant";
                 document.getElementById('start-btn').classList.add('playing-state');
             }
 
+            if (window.gameOverTriggered) return;
+
             if (dynamicPlaylist.length === 0) {
-                alert("Veuillez charger les morceaux iTunes d'abord.");
+                window.showAlertModal("Attention", "Veuillez charger les morceaux iTunes d'abord.");
                 fetchItunesPlaylist();
                 return;
             }
@@ -785,6 +1344,9 @@
             document.getElementById('qr-container').classList.add('minimized');
             document.getElementById('track-info-preview').textContent = "";
 
+            const startBtn = document.getElementById('start-btn');
+            startBtn.disabled = true;
+
             if (window.dbInstance && window.dbRef && window.dbGet && window.dbUpdate) {
                 window.dbGet(window.dbRef(window.dbInstance, 'players')).then((snapshot) => {
                     const players = snapshot.val();
@@ -793,7 +1355,8 @@
                             window.dbUpdate(window.dbRef(window.dbInstance, 'players/' + playerId), {
                                 answered: false,
                                 scoredThisRound: false,
-                                lastChoice: null
+                                lastChoice: null,
+                                lastEarnedPoints: 0
                             });
                         });
                     }
@@ -839,16 +1402,24 @@
                             Object.keys(players).forEach(id => {
                                 const p = players[id];
                                 if (p.answered && p.lastChoice !== null && !p.scoredThisRound) {
-                                    let pointsEarned = 0;
+                                    let pointsChange = 0;
                                     if (p.lastChoice === track.correctIndex) {
-                                        pointsEarned = musicTimeLeft;
+                                        pointsChange = musicTimeLeft;
+                                    } else {
+                                        pointsChange = -5;
                                     }
 
-                                    let newScore = (p.score || 0) + pointsEarned;
+                                    let newScore = Math.max(0, (p.score || 0) + pointsChange);
+                                    
                                     window.dbUpdate(window.dbRef(window.dbInstance, 'players/' + id), {
                                         score: newScore,
-                                        scoredThisRound: true
+                                        scoredThisRound: true,
+                                        lastEarnedPoints: pointsChange
                                     });
+
+                                    if (newScore >= window.winningScore) {
+                                        pendingVictory = true;
+                                    }
                                 }
                             });
                         }
@@ -863,9 +1434,14 @@
                     audioElem.pause();
                     document.getElementById('vinyl-disc').classList.remove('playing');
                     
-                    document.getElementById('status-label').textContent = "C'était :";
-                    document.getElementById('big-counter').textContent = ""; // Supprime le gros compteur / icône cible
-                    document.getElementById('track-info-preview').textContent = `${track.artistName} - ${track.trackName}`;
+                    if (pendingVictory) {
+                        triggerVictorySequence();
+                    } else {
+                        document.getElementById('status-label').textContent = "C'était :";
+                        document.getElementById('big-counter').textContent = ""; 
+                        document.getElementById('track-info-preview').textContent = `${track.artistName} - ${track.trackName}`;
+                        startBtn.disabled = false;
+                    }
                 }
             }, 100);
         }
