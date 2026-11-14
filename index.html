@@ -30,13 +30,13 @@
         }
 
         h1 {
-            font-size: 2.8rem;
+            font-size: 2.5rem;
             background: linear-gradient(45deg, #22c55e, #eab308);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
         }
 
-        /* Menu Burger complet d'origine */
+        /* Menu Burger d'origine */
         .burger-menu-container {
             position: relative;
         }
@@ -64,14 +64,14 @@
             gap: 12px;
             box-shadow: 0 15px 30px rgba(0,0,0,0.5);
             z-index: 1000;
-            min-width: 250px;
+            min-width: 220px;
         }
 
         .burger-dropdown.open {
             display: flex;
         }
 
-        .burger-dropdown button, .burger-dropdown select {
+        .burger-dropdown button {
             padding: 12px 16px;
             border-radius: 10px;
             border: none;
@@ -81,7 +81,6 @@
             text-align: left;
             color: white;
             background: rgba(255, 255, 255, 0.05);
-            width: 100%;
         }
 
         .burger-dropdown button:hover {
@@ -135,7 +134,7 @@
             word-break: break-all;
         }
 
-        /* Colonne de droite et pastilles de joueurs raccourcies 4K avec swipe poubelle */
+        /* Colonne de droite et pastilles longues d'origine */
         .right-panel {
             width: 450px;
             display: flex;
@@ -162,34 +161,7 @@
             gap: 15px;
         }
 
-        .player-row-container {
-            position: relative;
-            width: 100%;
-            max-width: 400px;
-            margin: 0 auto;
-            border-radius: 18px;
-            overflow: hidden;
-        }
-
-        .delete-action-bg {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: #ef4444;
-            display: flex;
-            align-items: center;
-            justify-content: flex-end;
-            padding-right: 25px;
-            border-radius: 18px;
-            color: white;
-            font-size: 1.8rem;
-            z-index: 1;
-        }
-
         .player-score-pill {
-            position: relative;
             display: flex;
             align-items: center;
             justify-content: space-between;
@@ -198,15 +170,7 @@
             background: rgba(25, 30, 45, 0.95);
             border: 3px solid var(--player-color, #22c55e);
             box-shadow: 0 8px 25px var(--player-glow, rgba(34, 197, 94, 0.4));
-            width: 100%;
-            z-index: 2;
-            transition: transform 0.2s ease;
-            cursor: grab;
-            user-select: none;
-        }
-
-        .player-score-pill.swiped {
-            transform: translateX(-80px);
+            width: 100%; /* Pastilles longues sur toute la largeur du panneau */
         }
 
         .player-info-left {
@@ -353,14 +317,6 @@
             <div class="burger-dropdown" id="burger-dropdown">
                 <button onclick="resetGame()">Nouvelle Partie</button>
                 <button onclick="clearAllPlayers()">Effacer les joueurs</button>
-                <div style="border-top: 1px solid rgba(255,255,255,0.1); margin: 5px 0;"></div>
-                <label style="font-size: 0.9rem; color: #94a3b8; display: block; margin-bottom: 5px;">Playlist Favorite</label>
-                <select id="playlist-selector" style="background: #0b0f19; color: white; padding: 8px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.2);">
-                    <option value="default">Par défaut (iTunes)</option>
-                    <option value="80s">Années 80</option>
-                    <option value="90s">Années 90</option>
-                    <option value="disney">Disney & Chansons</option>
-                </select>
             </div>
         </div>
     </header>
@@ -394,7 +350,7 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getDatabase, ref, onValue, update, remove, child } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+        import { getDatabase, ref, onValue, update, remove } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyC009nu3gKCkZczF_7w5Iqf9aUMd-TRsBM",
@@ -460,13 +416,6 @@
                     glowColor = `rgba(${r}, ${g}, ${b}, 0.4)`;
                 }
 
-                const rowContainer = document.createElement('div');
-                rowContainer.className = 'player-row-container';
-
-                const deleteBg = document.createElement('div');
-                deleteBg.className = 'delete-action-bg';
-                deleteBg.innerHTML = '🗑️';
-
                 const pill = document.createElement('div');
                 pill.className = 'player-score-pill';
                 pill.style.setProperty('--player-color', pColor);
@@ -478,31 +427,7 @@
                     </div>
                     <div class="player-score">${player.score || 0} pts</div>
                 `;
-
-                let startX = 0;
-                pill.addEventListener('touchstart', (e) => {
-                    startX = e.touches[0].clientX;
-                });
-
-                pill.addEventListener('touchmove', (e) => {
-                    let moveX = e.touches[0].clientX;
-                    let diff = moveX - startX;
-                    if (diff < -20) {
-                        pill.classList.add('swiped');
-                    } else if (diff > 20) {
-                        pill.classList.remove('swiped');
-                    }
-                });
-
-                deleteBg.addEventListener('click', async () => {
-                    if (confirm(`Supprimer le joueur ${player.name} ?`)) {
-                        await remove(child(ref(db, 'players'), player.id));
-                    }
-                });
-
-                rowContainer.appendChild(deleteBg);
-                rowContainer.appendChild(pill);
-                listEl.appendChild(rowContainer);
+                listEl.appendChild(pill);
 
                 const currentScore = player.score || 0;
                 if (currentScore >= TARGET_SCORE) {
@@ -521,4 +446,63 @@
             }
         });
 
-        function
+        function showVictoryScreen(winners, score) {
+            const overlay = document.getElementById('victory-screen');
+            const container = document.getElementById('winners-container');
+            const titleText = document.getElementById('victory-title-text');
+            
+            container.innerHTML = '';
+
+            if (winners.length > 1) {
+                titleText.textContent = `Égalité Parfaite (Ex-aequo) !`;
+            } else {
+                titleText.textContent = `Victoire Éclatante de ${winners[0].name} !`;
+            }
+
+            winners.forEach(winner => {
+                const card = document.createElement('div');
+                card.className = 'winner-card';
+                card.style.setProperty('--winner-color', winner.color || '#eab308');
+                card.innerHTML = `
+                    <div class="winner-avatar" style="background-image: url('${winner.avatar}')"></div>
+                    <div class="winner-name">${escapeHtml(winner.name)}</div>
+                    <div class="winner-score-text">${score} pts</div>
+                `;
+                container.appendChild(card);
+            });
+
+            overlay.classList.add('active');
+        }
+
+        window.resetGame = async function() {
+            document.getElementById('burger-dropdown').classList.remove('open');
+            const snapshot = await import("https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js").then(async ({get}) => get(ref(db, 'players')));
+            const players = snapshot.val() || {};
+            
+            const updates = {};
+            Object.keys(players).forEach(id => {
+                updates[`players/${id}/score`] = 0;
+                updates[`players/${id}/answered`] = false;
+            });
+            
+            await update(ref(db), updates);
+            document.getElementById('victory-screen').classList.remove('active');
+            gameEnded = false;
+        };
+
+        window.clearAllPlayers = async function() {
+            document.getElementById('burger-dropdown').classList.remove('open');
+            if (confirm("Voulez-vous vraiment effacer tous les joueurs ?")) {
+                await remove(ref(db, 'players'));
+                document.getElementById('victory-screen').classList.remove('active');
+                gameEnded = false;
+            }
+        };
+
+        function escapeHtml(text) {
+            const map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' };
+            return text.replace(/[&<>"']/g, function(m) { return map[m]; });
+        }
+    </script>
+</body>
+</html>
