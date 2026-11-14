@@ -110,6 +110,29 @@
             width: 100%;
         }
 
+        .score-target-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 6px;
+        }
+
+        .target-btn {
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            color: white;
+            padding: 6px;
+            border-radius: 6px;
+            font-weight: 600;
+            font-size: 0.85rem;
+            cursor: pointer;
+            text-align: center;
+        }
+
+        .target-btn.active {
+            background: #7928ca;
+            border-color: #ff007f;
+        }
+
         .menu-action-btn {
             background: rgba(255, 255, 255, 0.08);
             border: 1px solid rgba(255, 255, 255, 0.1);
@@ -132,10 +155,6 @@
             border-color: rgba(255, 107, 107, 0.3);
         }
 
-        .menu-action-btn.danger:hover {
-            background: rgba(255, 107, 107, 0.15);
-        }
-
         .menu-action-btn.admin-master {
             background: #7928ca;
             border-color: #ff007f;
@@ -154,9 +173,18 @@
             background: rgba(121, 40, 202, 0.25);
             border: 1px solid rgba(121, 40, 202, 0.5);
             color: #fff;
-            padding: 4px 10px;
+            padding: 4px 8px;
             border-radius: 20px;
             font-size: 0.75rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .fav-pill .delete-fav {
+            font-size: 0.65rem;
+            color: #ff6b6b;
             cursor: pointer;
         }
 
@@ -169,7 +197,7 @@
         #admin-controls-section {
             display: none;
             flex-direction: column;
-            gap: 8px;
+            gap: 10px;
             background: rgba(121, 40, 202, 0.1);
             padding: 10px;
             border-radius: 10px;
@@ -340,7 +368,6 @@
             gap: 15px;
         }
 
-        /* Pastille de score du joueur */
         .player-pill-container {
             display: flex;
             align-items: center;
@@ -397,7 +424,6 @@
             margin-bottom: 5px;
         }
 
-        /* Cases de réponses plus grosses et aux couleurs distinctes */
         .choices-grid {
             display: grid;
             grid-template-columns: 1fr;
@@ -485,10 +511,21 @@
                     <!-- Bouton Maître du jeu -->
                     <button class="menu-action-btn admin-master" onclick="playClickSound(); promptAdminPassword()">Maître du jeu</button>
 
-                    <!-- Section Admin (cachée par défaut) -->
+                    <!-- Section Admin (contrôle total) -->
                     <div id="admin-controls-section">
                         <label style="font-size: 0.8rem; color: #ff007f; font-weight: bold;">CONTRÔLE MAÎTRE DU JEU</label>
                         
+                        <!-- Objectif de points -->
+                        <div class="menu-item">
+                            <label>Objectif de points :</label>
+                            <div class="score-target-grid">
+                                <button class="target-btn active" id="btn-150" onclick="playClickSound(); setTargetScore(150)">150 pts</button>
+                                <button class="target-btn" id="btn-200" onclick="playClickSound(); setTargetScore(200)">200 pts</button>
+                                <button class="target-btn" id="btn-250" onclick="playClickSound(); setTargetScore(250)">250 pts</button>
+                                <button class="target-btn" id="btn-300" onclick="playClickSound(); setTargetScore(300)">300 pts</button>
+                            </div>
+                        </div>
+
                         <div class="menu-divider"></div>
                         <label>Rechercher une playlist :</label>
                         <input type="text" id="burger-search-input" class="menu-search-input" placeholder="Ex: rock, 80s...">
@@ -501,6 +538,7 @@
 
                         <div class="menu-divider"></div>
                         <button class="menu-action-btn" onclick="playClickSound(); masterResetScores()">Remettre scores à 0</button>
+                        <button class="menu-action-btn" onclick="playClickSound(); masterRelandGame()">Relancer (garder joueurs)</button>
                         <button class="menu-action-btn danger" onclick="playClickSound(); masterStopGame()">Arrêter la partie</button>
                     </div>
                 </div>
@@ -548,12 +586,12 @@
             </div>
 
             <div class="game-board" id="game-board-content">
-                <div class="waiting-message" id="waiting-text">En attente du lancement de la partie par la TV...</div>
+                <div class="waiting-message" id="waiting-text">En attente du lancement du morceau...</div>
             </div>
         </div>
     </main>
 
-    <!-- Bouton de contrôle fixe en bas pour le Maître du jeu -->
+    <!-- Gros bouton Maître du jeu en bas de l'écran -->
     <div class="master-action-footer" id="master-footer">
         <button class="master-big-btn" id="master-main-btn" onclick="playClickSound(); handleMasterAction()">Démarrer la partie</button>
     </div>
@@ -646,7 +684,6 @@
             document.getElementById('preview-avatar').style.backgroundImage = `url('${url}')`;
         };
 
-        // Palette de couleurs aléatoires pour les joueurs
         const playerColors = ["#ff007f", "#7928ca", "#22c55e", "#3b82f6", "#eab308", "#ef4444", "#06b6d4", "#ec4899", "#8b5cf6"];
         let assignedColor = playerColors[Math.floor(Math.random() * playerColors.length)];
 
@@ -709,7 +746,6 @@
         }
 
         // --- GESTION DU MODE MAÎTRE DU JEU (ADMIN) ---
-        let isAdminMaster = false;
         let gameHasStartedMaster = false;
 
         window.promptAdminPassword = function() {
@@ -734,7 +770,6 @@
                 const pwd = document.getElementById('admin-pwd-input').value;
                 if (pwd === "admin") {
                     overlay.classList.remove('open');
-                    isAdminMaster = true;
                     document.getElementById('admin-controls-section').style.display = 'flex';
                     document.getElementById('master-footer').style.display = 'block';
                     window.showAlertModal("Succès", "Mode Maître du jeu activé !");
@@ -748,15 +783,25 @@
             overlay.classList.add('open');
         };
 
+        window.setTargetScore = function(score) {
+            set(ref(db, 'gameState/targetScore'), score);
+            [150, 200, 250, 300].forEach(val => {
+                const btn = document.getElementById(`btn-${val}`);
+                if (val === score) {
+                    btn.classList.add('active');
+                } else {
+                    btn.classList.remove('active');
+                }
+            });
+        };
+
         window.handleMasterAction = function() {
             if (!gameHasStartedMaster) {
-                // Premier clic : Démarre la partie
                 gameHasStartedMaster = true;
                 document.getElementById('master-main-btn').textContent = "Morceau suivant";
                 document.getElementById('master-main-btn').style.background = "#7928ca";
                 set(ref(db, 'gameState/remoteAction'), { type: 'next', timestamp: Date.now() });
             } else {
-                // Clics suivants : Morceau suivant
                 set(ref(db, 'gameState/remoteAction'), { type: 'next', timestamp: Date.now() });
             }
         };
@@ -768,9 +813,18 @@
                     Object.keys(players).forEach(id => {
                         update(ref(db, 'players/' + id), { score: 0, answered: false, lastChoice: null, lastEarnedPoints: 0 });
                     });
-                    window.showAlertModal("Scores", "Tous les scores ont été remis à zéro.");
+                    window.showAlertModal("Scores", "Scores remis à zéro.");
                 }
             });
+            toggleBurgerMenu();
+        };
+
+        window.masterRelandGame = function() {
+            gameHasStartedMaster = true;
+            document.getElementById('master-main-btn').textContent = "Morceau suivant";
+            document.getElementById('master-main-btn').style.background = "#7928ca";
+            set(ref(db, 'gameState/remoteAction'), { type: 'relaunch', timestamp: Date.now() });
+            window.showAlertModal("Partie", "Nouvelle partie lancée !");
             toggleBurgerMenu();
         };
 
@@ -779,7 +833,7 @@
             document.getElementById('master-main-btn').textContent = "Démarrer la partie";
             document.getElementById('master-main-btn').style.background = "#22c55e";
             set(ref(db, 'gameState/remoteAction'), { type: 'stop', timestamp: Date.now() });
-            window.showAlertModal("Partie", "La partie a été arrêtée.");
+            window.showAlertModal("Partie", "Partie arrêtée.");
             toggleBurgerMenu();
         };
 
@@ -805,28 +859,38 @@
             favs.forEach(fav => {
                 const pill = document.createElement('div');
                 pill.className = 'fav-pill';
-                pill.textContent = fav;
-                pill.onclick = () => {
-                    playClickSound();
-                    document.getElementById('burger-search-input').value = fav;
-                    searchFromBurger();
-                };
+                pill.innerHTML = `
+                    <span onclick="playClickSound(); selectFavorite('${fav}')">${fav}</span>
+                    <span class="delete-fav" onclick="playClickSound(); removeFavorite('${fav}', event)">✕</span>
+                `;
                 container.appendChild(pill);
             });
+        };
+
+        window.selectFavorite = function(fav) {
+            document.getElementById('burger-search-input').value = fav;
+            searchFromBurger();
+        };
+
+        window.removeFavorite = function(fav, event) {
+            event.stopPropagation();
+            let favs = getFavorites();
+            favs = favs.filter(f => f !== fav);
+            saveFavorites(favs);
         };
 
         window.searchFromBurger = function() {
             const query = document.getElementById('burger-search-input').value.trim();
             if (!query) return;
             set(ref(db, 'gameState/remoteQuery'), query);
-            window.showAlertModal("Recherche", `La playlist "${query}" a été transmise à la TV.`);
+            window.showAlertModal("Recherche", `Playlist "${query}" transmise à la TV.`);
             toggleBurgerMenu();
         };
 
         window.addCurrentQueryToFavorites = function() {
             const query = document.getElementById('burger-search-input').value.trim();
             if (!query) {
-                window.showAlertModal("Attention", "Veuillez entrer un terme de recherche.");
+                window.showAlertModal("Attention", "Entrez un terme de recherche.");
                 return;
             }
             let favs = getFavorites();
@@ -849,7 +913,6 @@
                     return;
                 }
 
-                // Palette de couleurs distinctes pour les 4 gros boutons de réponses
                 const choiceColors = ["#7928ca", "#3b82f6", "#22c55e", "#eab308"];
 
                 let html = `<div class="timer-circle" id="live-timer">${state.timeLeft || 15}</div>`;
