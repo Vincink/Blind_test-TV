@@ -283,7 +283,6 @@
                     document.getElementById('screen-waiting').classList.add('hidden');
                     document.getElementById('screen-game').classList.remove('hidden');
                     
-                    // Si c'est un nouveau morceau, réactiver les boutons pour ce joueur
                     if (state.trackIndex !== lastTrackIndex) {
                         lastTrackIndex = state.trackIndex;
                         hasAnsweredCurrentRound = false;
@@ -293,12 +292,10 @@
                         }
                     }
 
-                    // Mettre à jour le chrono mobile en direct
                     if (state.timeLeft !== undefined) {
                         document.getElementById('mobile-timer-display').textContent = state.timeLeft;
                     }
 
-                    // Afficher uniquement les réponses épurées (artiste - titre)
                     if (state.choices) {
                         for (let i = 0; i < 4; i++) {
                             document.getElementById(`choice-${i}`).textContent = state.choices[i];
