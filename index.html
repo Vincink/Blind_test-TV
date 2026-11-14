@@ -36,6 +36,12 @@
             -webkit-text-fill-color: transparent;
         }
 
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
         button.btn {
             background: #7928ca;
             color: white;
@@ -51,6 +57,112 @@
         button.btn:hover {
             background: #8a35e6;
             transform: scale(1.02);
+        }
+
+        /* Menu Burger Styling */
+        .burger-container {
+            position: relative;
+        }
+
+        .burger-btn {
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            width: 44px;
+            height: 44px;
+            border-radius: 10px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            gap: 5px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .burger-btn:hover {
+            background: rgba(255, 255, 255, 0.15);
+        }
+
+        .burger-btn span {
+            display: block;
+            width: 22px;
+            height: 2px;
+            background: white;
+            border-radius: 2px;
+        }
+
+        .burger-menu {
+            position: absolute;
+            right: 0;
+            top: 55px;
+            background: #151b2b;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 14px;
+            width: 280px;
+            padding: 20px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.6);
+            display: none;
+            flex-direction: column;
+            gap: 15px;
+            z-index: 100;
+        }
+
+        .burger-menu.open {
+            display: flex;
+        }
+
+        .menu-item {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .menu-item label {
+            font-size: 0.9rem;
+            color: #a0aec0;
+            font-weight: 500;
+        }
+
+        .menu-item input {
+            padding: 8px 12px;
+            border-radius: 8px;
+            border: 1px solid rgba(255,255,255,0.2);
+            background: rgba(0,0,0,0.3);
+            color: white;
+            font-size: 1rem;
+            outline: none;
+        }
+
+        .menu-divider {
+            height: 1px;
+            background: rgba(255, 255, 255, 0.1);
+            margin: 5px 0;
+        }
+
+        .menu-action-btn {
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: white;
+            padding: 10px;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            cursor: pointer;
+            text-align: left;
+            transition: background 0.2s;
+        }
+
+        .menu-action-btn:hover {
+            background: rgba(255, 255, 255, 0.15);
+        }
+
+        .menu-action-btn.danger {
+            color: #ff6b6b;
+            border-color: rgba(255, 107, 107, 0.3);
+        }
+
+        .menu-action-btn.danger:hover {
+            background: rgba(255, 107, 107, 0.15);
         }
 
         main {
@@ -240,6 +352,12 @@
             font-size: 1.2rem;
         }
 
+        .right-header-controls {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
         .players-count {
             background: #7928ca;
             padding: 2px 10px;
@@ -257,7 +375,7 @@
             padding-right: 5px;
         }
 
-        /* Style Swipeable pour suppression de joueur */
+        /* Style Swipeable pour suppression individuelle (poubelle cachée par défaut) */
         .player-row-wrapper {
             position: relative;
             overflow: hidden;
@@ -336,7 +454,27 @@
 <body>
 
     <header>
-        <h1>Blind Test Chanson Française (Objectif : 150 pts)</h1>
+        <h1 id="main-title">Blind Test Chanson Française (Objectif : <span id="target-score-display">150</span> pts)</h1>
+        
+        <div class="header-right">
+            <!-- Menu Burger -->
+            <div class="burger-container">
+                <div class="burger-btn" onclick="toggleBurgerMenu()">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </div>
+                <div class="burger-menu" id="burger-dropdown">
+                    <div class="menu-item">
+                        <label for="target-input">Objectif de points :</label>
+                        <input type="number" id="target-input" value="150" min="50" step="10" onchange="updateTargetScore(this.value)">
+                    </div>
+                    <div class="menu-divider"></div>
+                    <button class="menu-action-btn" onclick="resetGameKeepPlayers(); toggleBurgerMenu();">🔄 Relancer (garder joueurs)</button>
+                    <button class="menu-action-btn danger" onclick="removeAllPlayers(); toggleBurgerMenu();">🗑️ Supprimer tous les joueurs</button>
+                </div>
+            </div>
+        </div>
     </header>
 
     <main>
@@ -371,7 +509,7 @@
         <div class="right-zone">
             <div class="right-header-bar">
                 <h2>Classement</h2>
-                <div style="display: flex; align-items: center; gap: 10px;">
+                <div class="right-header-controls">
                     <span class="players-count" id="player-count">0</span>
                     <button class="btn" id="start-btn" onclick="startNextRound()" style="padding: 6px 14px; font-size: 0.9rem;">Morceau suivant</button>
                 </div>
@@ -405,6 +543,24 @@
         window.dbGet = get;
         window.dbRemove = remove;
 
+        let winningScore = 150;
+
+        window.toggleBurgerMenu = function() {
+            const dropdown = document.getElementById('burger-dropdown');
+            dropdown.classList.toggle('open');
+        };
+
+        window.updateTargetScore = function(val) {
+            winningScore = parseInt(val) || 150;
+            document.getElementById('target-score-display').textContent = winningScore;
+        };
+
+        window.removeAllPlayers = function() {
+            if (confirm("Voulez-vous vraiment supprimer TOUS les joueurs ?")) {
+                remove(ref(db, 'players'));
+            }
+        };
+
         const mobileUrl = "https://vincink.github.io/Blind_test-TV/mobile.html"; 
         
         document.getElementById('qr-code-box').innerHTML = `
@@ -434,13 +590,13 @@
             document.getElementById('player-count').textContent = playersArray.length;
 
             playersArray.forEach((player, index) => {
-                // Vérifier si un joueur atteint 150 points
-                if ((player.score || 0) >= 150 && !gameOverTriggered) {
+                // Vérifier si un joueur atteint ou dépasse l'objectif de points
+                if ((player.score || 0) >= winningScore && !gameOverTriggered) {
                     gameOverTriggered = true;
                     setTimeout(() => {
                         if (window.roundActiveLoop) return; // Attendre la fin du morceau en cours
                         document.getElementById('status-label').textContent = `🏆 Victoire éclatante de ${player.name} !`;
-                        document.getElementById('big-counter').textContent = "150+ pts";
+                        document.getElementById('big-counter').textContent = `${winningScore}+ pts`;
                         document.getElementById('start-btn').textContent = "Nouvelle partie";
                         document.getElementById('start-btn').onclick = resetGameKeepPlayers;
                     }, 500);
@@ -463,10 +619,9 @@
                     </div>
                 `;
 
-                // Logique Swipe Tactile ou Souris
+                // Logique Swipe Tactile ou Souris pour révéler la poubelle cachée
                 const pill = wrapper.querySelector('.player-pill');
                 let startX = 0;
-                let currentTranslate = 0;
 
                 pill.addEventListener('touchstart', (e) => {
                     startX = e.touches[0].clientX;
@@ -553,7 +708,7 @@
             fetchItunesPlaylist();
         });
 
-        function resetGameKeepPlayers() {
+        window.resetGameKeepPlayers = function() {
             if (window.dbInstance && window.dbRef && window.dbGet && window.dbUpdate) {
                 window.dbGet(window.dbRef(window.dbInstance, 'players')).then((snapshot) => {
                     const players = snapshot.val();
@@ -575,7 +730,7 @@
             startNextRound();
         }
 
-        // Lancement immédiat du morceau (suppression des 3 secondes)
+        // Lancement immédiat du morceau (sans délai de 3s)
         function startNextRound() {
             if (dynamicPlaylist.length === 0) {
                 alert("Veuillez charger les morceaux iTunes d'abord.");
@@ -638,8 +793,23 @@
             roundActive = true;
             window.roundActiveLoop = true;
 
-            // Barème de rapidité seconde par seconde (15 à 1 pt)
-            const scoreCheckInterval = setInterval(() => {
+            // Chronomètre stable basé sur Date.now() pour éviter toute accélération intempestive
+            const startTime = Date.now();
+            const duration = 15000; // 15 secondes en millisecondes
+
+            const timerInterval = setInterval(() => {
+                const elapsed = Date.now() - startTime;
+                const remaining = Math.max(0, Math.ceil((duration - elapsed) / 1000));
+                
+                if (remaining !== musicTimeLeft) {
+                    musicTimeLeft = remaining;
+                    document.getElementById('big-counter').textContent = musicTimeLeft;
+                    if (window.dbInstance && window.dbRef) {
+                        window.dbUpdate(window.dbRef(window.dbInstance, 'gameState'), { timeLeft: musicTimeLeft });
+                    }
+                }
+
+                // Vérification en continu des réponses des joueurs
                 if (window.dbInstance && window.dbRef && window.dbGet && window.dbUpdate && roundActive) {
                     window.dbGet(window.dbRef(window.dbInstance, 'players')).then((snapshot) => {
                         const players = snapshot.val();
@@ -662,20 +832,9 @@
                         }
                     });
                 }
-            }, 200);
 
-            // Chronomètre de 15 secondes
-            const musicInterval = setInterval(() => {
-                musicTimeLeft--;
-                if (musicTimeLeft > 0) {
-                    document.getElementById('big-counter').textContent = musicTimeLeft;
-                    // Mettre à jour le temps restant dans Firebase pour l'affichage mobile
-                    if (window.dbInstance && window.dbRef) {
-                        window.dbUpdate(window.dbRef(window.dbInstance, 'gameState'), { timeLeft: musicTimeLeft });
-                    }
-                } else {
-                    clearInterval(musicInterval);
-                    clearInterval(scoreCheckInterval);
+                if (elapsed >= duration) {
+                    clearInterval(timerInterval);
                     roundActive = false;
                     window.roundActiveLoop = false;
 
@@ -687,7 +846,7 @@
                     document.getElementById('track-info-preview').textContent = `${track.artistName} - ${track.trackName}`;
                     document.getElementById('big-counter').textContent = "🎯";
                 }
-            }, 1000);
+            }, 100);
         }
     </script>
 </body>
