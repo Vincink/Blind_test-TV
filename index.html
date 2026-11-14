@@ -168,7 +168,7 @@
         main {
             flex: 1;
             display: grid;
-            grid-template-columns: 350px 1fr 420px;
+            grid-template-columns: 350px 1fr 480px;
             padding: 30px;
             gap: 30px;
             position: relative;
@@ -261,12 +261,12 @@
 
         .vinyl-container {
             position: relative;
-            width: 240px;
-            height: 240px;
+            width: 200px;
+            height: 200px;
             display: flex;
             align-items: center;
             justify-content: center;
-            margin-bottom: 20px;
+            margin-bottom: 15px;
         }
 
         .vinyl {
@@ -287,15 +287,15 @@
         }
 
         .vinyl-label {
-            width: 80px;
-            height: 80px;
+            width: 70px;
+            height: 70px;
             border-radius: 50%;
             background: linear-gradient(45deg, #ff007f, #7928ca);
             display: flex;
             align-items: center;
             justify-content: center;
             font-weight: bold;
-            font-size: 0.7rem;
+            font-size: 0.65rem;
             border: 3px solid #fff;
             text-align: center;
         }
@@ -307,36 +307,57 @@
 
         .game-status-display {
             text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
         }
 
         .status-title {
-            font-size: 1.3rem;
+            font-size: 1.2rem;
             color: #a0aec0;
-            margin-bottom: 8px;
+            margin-bottom: 5px;
+        }
+
+        .counter-wrapper {
+            height: 90px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 5px 0;
         }
 
         .big-counter {
-            font-size: 4rem;
+            font-size: 3.8rem;
             font-weight: 800;
             color: #ff007f;
             text-shadow: 0 0 20px rgba(255, 0, 127, 0.4);
+            line-height: 1;
         }
 
         .track-info-preview {
-            margin-top: 15px;
-            font-size: 1rem;
+            margin-top: 5px;
+            font-size: 1.1rem;
             color: #e2e8f0;
             font-weight: 600;
             text-align: center;
+            min-height: 30px;
         }
 
         .right-zone {
+            display: grid;
+            grid-template-columns: 1fr 180px;
+            gap: 20px;
             background: rgba(255, 255, 255, 0.03);
             border: 1px solid rgba(255, 255, 255, 0.08);
             border-radius: 16px;
             padding: 20px;
+        }
+
+        .leaderboard-column {
             display: flex;
             flex-direction: column;
+            height: 100%;
         }
 
         .right-header-bar {
@@ -349,13 +370,7 @@
         }
 
         .right-header-bar h2 {
-            font-size: 1.2rem;
-        }
-
-        .right-header-controls {
-            display: flex;
-            align-items: center;
-            gap: 10px;
+            font-size: 1.1rem;
         }
 
         .players-count {
@@ -373,6 +388,49 @@
             flex-direction: column;
             gap: 10px;
             padding-right: 5px;
+        }
+
+        .controls-column {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-left: 1px solid rgba(255, 255, 255, 0.08);
+            padding-left: 15px;
+        }
+
+        /* Bouton dynamique (Vert au démarrage, puis violet) */
+        .big-action-btn {
+            width: 100%;
+            height: 120px;
+            background: linear-gradient(135deg, #22c55e, #16a34a);
+            color: white;
+            border: none;
+            border-radius: 16px;
+            font-size: 1.1rem;
+            font-weight: 800;
+            cursor: pointer;
+            box-shadow: 0 10px 25px rgba(34, 197, 94, 0.3);
+            transition: transform 0.1s, filter 0.2s, background 0.3s;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            text-align: center;
+            padding: 10px;
+        }
+
+        .big-action-btn.playing-state {
+            background: linear-gradient(135deg, #ff007f, #7928ca);
+            box-shadow: 0 10px 25px rgba(255, 0, 127, 0.4);
+        }
+
+        .big-action-btn:active {
+            transform: scale(0.96);
+        }
+
+        .big-action-btn i {
+            font-size: 1.8rem;
         }
 
         /* Style Swipeable pour suppression individuelle (poubelle cachée par défaut) */
@@ -454,7 +512,7 @@
 <body>
 
     <header>
-        <h1 id="main-title">Blind Test Chanson Française (Objectif : <span id="target-score-display">150</span> pts)</h1>
+        <h1>Blind Test</h1>
         
         <div class="header-right">
             <!-- Menu Burger -->
@@ -497,8 +555,10 @@
             </div>
             
             <div class="game-status-display">
-                <div class="status-title" id="status-label">Charge les morceaux puis clique sur Suivant</div>
-                <div class="big-counter" id="big-counter">--</div>
+                <div class="status-title" id="status-label">Charge les morceaux puis clique sur Démarrer</div>
+                <div class="counter-wrapper">
+                    <div class="big-counter" id="big-counter">--</div>
+                </div>
                 <div class="track-info-preview" id="track-info-preview"></div>
             </div>
 
@@ -507,14 +567,19 @@
         </div>
 
         <div class="right-zone">
-            <div class="right-header-bar">
-                <h2>Classement</h2>
-                <div class="right-header-controls">
+            <div class="leaderboard-column">
+                <div class="right-header-bar">
+                    <h2>Joueurs connectés</h2>
                     <span class="players-count" id="player-count">0</span>
-                    <button class="btn" id="start-btn" onclick="startNextRound()" style="padding: 6px 14px; font-size: 0.9rem;">Morceau suivant</button>
                 </div>
+                <div class="players-list" id="players-list"></div>
             </div>
-            <div class="players-list" id="players-list"></div>
+            <div class="controls-column">
+                <button class="big-action-btn" id="start-btn" onclick="startNextRound()">
+                    <i class="fa-solid fa-play" id="start-btn-icon"></i>
+                    <span id="start-btn-text">Démarrer la partie</span>
+                </button>
+            </div>
         </div>
     </main>
 
@@ -552,7 +617,6 @@
 
         window.updateTargetScore = function(val) {
             winningScore = parseInt(val) || 150;
-            document.getElementById('target-score-display').textContent = winningScore;
         };
 
         window.removeAllPlayers = function() {
@@ -577,7 +641,7 @@
 
             if (!data) {
                 document.getElementById('player-count').textContent = '0';
-                listContainer.innerHTML = '<div style="color: #a0aec0; text-align: center; margin-top: 20px;">En attente de connexions...</div>';
+                listContainer.innerHTML = '<div style="color: #a0aec0; text-align: center; margin-top: 20px;">En attente de joueurs</div>';
                 return;
             }
 
@@ -590,14 +654,13 @@
             document.getElementById('player-count').textContent = playersArray.length;
 
             playersArray.forEach((player, index) => {
-                // Vérifier si un joueur atteint ou dépasse l'objectif de points
                 if ((player.score || 0) >= winningScore && !gameOverTriggered) {
                     gameOverTriggered = true;
                     setTimeout(() => {
-                        if (window.roundActiveLoop) return; // Attendre la fin du morceau en cours
+                        if (window.roundActiveLoop) return;
                         document.getElementById('status-label').textContent = `🏆 Victoire éclatante de ${player.name} !`;
-                        document.getElementById('big-counter').textContent = `${winningScore}+ pts`;
-                        document.getElementById('start-btn').textContent = "Nouvelle partie";
+                        document.getElementById('big-counter').textContent = `${winningScore}+`;
+                        document.getElementById('start-btn-text').textContent = "Nouvelle partie";
                         document.getElementById('start-btn').onclick = resetGameKeepPlayers;
                     }, 500);
                 }
@@ -619,7 +682,6 @@
                     </div>
                 `;
 
-                // Logique Swipe Tactile ou Souris pour révéler la poubelle cachée
                 const pill = wrapper.querySelector('.player-pill');
                 let startX = 0;
 
@@ -648,7 +710,7 @@
         };
     </script>
 
-    <!-- FontAwesome pour la poubelle -->
+    <!-- FontAwesome pour la poubelle et les icônes -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
     <script>
@@ -657,8 +719,8 @@
         let roundActive = false;
         let musicTimeLeft = 15;
         window.roundActiveLoop = false;
+        let gameHasStarted = false;
 
-        // Chargement élargi depuis iTunes (200 morceaux max)
         async function fetchItunesPlaylist() {
             const query = document.getElementById('itunes-query').value || "variete francaise";
             document.getElementById('status-label').textContent = "Recherche élargie sur iTunes...";
@@ -725,22 +787,31 @@
             }
             playedIndices = [];
             gameOverTriggered = false;
-            document.getElementById('start-btn').textContent = "Morceau suivant";
+            gameHasStarted = true;
+            document.getElementById('start-btn-icon').className = "fa-solid fa-forward-step";
+            document.getElementById('start-btn-text').textContent = "Morceau suivant";
+            document.getElementById('start-btn').classList.add('playing-state');
             document.getElementById('start-btn').onclick = startNextRound;
             startNextRound();
         }
 
-        // Lancement immédiat du morceau (sans délai de 3s)
         function startNextRound() {
+            if (!gameHasStarted) {
+                gameHasStarted = true;
+                // Transformer le bouton en « Morceau suivant » (violet) pour la suite
+                document.getElementById('start-btn-icon').className = "fa-solid fa-forward-step";
+                document.getElementById('start-btn-text').textContent = "Morceau suivant";
+                document.getElementById('start-btn').classList.add('playing-state');
+            }
+
             if (dynamicPlaylist.length === 0) {
                 alert("Veuillez charger les morceaux iTunes d'abord.");
                 fetchItunesPlaylist();
                 return;
             }
 
-            // Sélection aléatoire d'un morceau non encore joué dans la liste
             if (playedIndices.length >= dynamicPlaylist.length) {
-                playedIndices = []; // Recommencer si tout a été joué
+                playedIndices = [];
             }
 
             let randomIndex;
@@ -751,14 +822,12 @@
             playedIndices.push(randomIndex);
             const track = dynamicPlaylist[randomIndex];
 
-            // Déverrouillage audio interactif (Safari/iPad)
             const audioElem = document.getElementById('audio-player');
             audioElem.play().catch(() => {});
 
             document.getElementById('qr-container').classList.add('minimized');
             document.getElementById('track-info-preview').textContent = "";
 
-            // Réinitialiser les états des joueurs pour ce tour dans Firebase
             if (window.dbInstance && window.dbRef && window.dbGet && window.dbUpdate) {
                 window.dbGet(window.dbRef(window.dbInstance, 'players')).then((snapshot) => {
                     const players = snapshot.val();
@@ -773,7 +842,6 @@
                     }
                 });
 
-                // Envoyer les choix aux téléphones (uniquement les réponses, sans catégorie)
                 window.dbSet(window.dbRef(window.dbInstance, 'gameState'), {
                     status: 'playing',
                     choices: track.choices,
@@ -781,7 +849,6 @@
                 });
             }
 
-            // Lancement immédiat de l'extrait et du chrono de 15s
             document.getElementById('status-label').textContent = "Extrait en cours...";
             musicTimeLeft = 15;
             document.getElementById('big-counter').textContent = musicTimeLeft;
@@ -793,9 +860,8 @@
             roundActive = true;
             window.roundActiveLoop = true;
 
-            // Chronomètre stable basé sur Date.now() pour éviter toute accélération intempestive
             const startTime = Date.now();
-            const duration = 15000; // 15 secondes en millisecondes
+            const duration = 15000;
 
             const timerInterval = setInterval(() => {
                 const elapsed = Date.now() - startTime;
@@ -809,7 +875,6 @@
                     }
                 }
 
-                // Vérification en continu des réponses des joueurs
                 if (window.dbInstance && window.dbRef && window.dbGet && window.dbUpdate && roundActive) {
                     window.dbGet(window.dbRef(window.dbInstance, 'players')).then((snapshot) => {
                         const players = snapshot.val();
@@ -841,10 +906,9 @@
                     audioElem.pause();
                     document.getElementById('vinyl-disc').classList.remove('playing');
                     
-                    // Révéler la réponse
                     document.getElementById('status-label').textContent = "C'était :";
                     document.getElementById('track-info-preview').textContent = `${track.artistName} - ${track.trackName}`;
-                    document.getElementById('big-counter').textContent = " ";
+                    document.getElementById('big-counter').textContent = "🎯";
                 }
             }, 100);
         }
