@@ -362,7 +362,7 @@
             gap: 15px;
         }
 
-        /* Pastille de score du joueur (style plateau télé) */
+        /* Pastille de score du joueur */
         .player-pill-container {
             display: flex;
             align-items: center;
@@ -617,7 +617,26 @@
             dropdown.classList.toggle('open');
         };
 
-        // Générateur d'avatar cartoon auto (via DiceBear avataaars ou bottts)
+        // Anti-mise en veille (Wake Lock API) pour empêcher le téléphone de se verrouiller
+        let wakeLock = null;
+        async function requestWakeLock() {
+            if ('wakeLock' in navigator) {
+                try {
+                    wakeLock = await navigator.wakeLock.request('screen');
+                } catch (err) {
+                    // Ignore si refusé ou non supporté
+                }
+            }
+        }
+
+        // Réactive le verrouillage si l'utilisateur revient sur l'onglet
+        document.addEventListener('visibilitychange', async () => {
+            if (wakeLock !== null && document.visibilityState === 'visible') {
+                await requestWakeLock();
+            }
+        });
+
+        // Générateur d'avatar cartoon auto (via DiceBear)
         function getCartoonAvatarUrl(seed) {
             const safeSeed = seed && seed.trim() !== "" ? seed.trim() : "player";
             return `https://api.dicebear.com/7.x/bottts/svg?seed=${encodeURIComponent(safeSeed)}`;
@@ -659,6 +678,9 @@
             }
 
             const avatarUrl = getCartoonAvatarUrl(nameInput);
+
+            // Active l'anti-mise en veille de l'écran du téléphone
+            requestWakeLock();
 
             const playerRef = ref(db, 'players/' + playerId);
             set(playerRef, {
@@ -740,7 +762,6 @@
         };
 
         window.triggerNextRoundMaster = function() {
-            // Déclenche le passage au morceau suivant sur la TV
             set(ref(db, 'gameState/remoteAction'), { type: 'next', timestamp: Date.now() });
             toggleBurgerMenu();
         };
@@ -800,7 +821,7 @@
             const query = document.getElementById('burger-search-input').value.trim();
             if (!query) return;
             set(ref(db, 'gameState/remoteQuery'), query);
-            window.showAlertModal("Recherche", `La playlist "${query}`} a été transmise à la TV.`);
+            window.showAlertModal("Recherche", `La playlist "${query}" a été transmise à la TV.`);
             toggleBurgerMenu();
         };
 
