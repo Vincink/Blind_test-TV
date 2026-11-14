@@ -3,14 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Blind Test - Télécommande Mobile</title>
+    <title>Blind Test - Joueur</title>
     <style>
         * {
             box-sizing: border-box;
             margin: 0;
             padding: 0;
             font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            user-select: none;
+            -webkit-tap-highlight-color: transparent;
         }
 
         body {
@@ -19,213 +19,546 @@
             height: 100vh;
             display: flex;
             flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            padding: 20px;
             overflow: hidden;
+            touch-action: manipulation;
         }
 
-        .screen {
-            width: 100%;
-            max-width: 400px;
+        header {
+            padding: 15px 20px;
             display: flex;
-            flex-direction: column;
+            justify-content: space-between;
             align-items: center;
-            justify-content: center;
-            height: 100%;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
         }
 
-        .hidden {
-            display: none !important;
-        }
-
-        .login-card {
-            width: 100%;
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            padding: 30px;
-            border-radius: 20px;
-            text-align: center;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-        }
-
-        .login-card h2 {
-            font-size: 1.5rem;
-            margin-bottom: 25px;
+        h1 {
+            font-size: 1.3rem;
             background: linear-gradient(45deg, #ff007f, #7928ca);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
         }
 
-        input[type="text"] {
-            width: 100%;
-            padding: 15px;
-            border-radius: 12px;
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            background: rgba(0, 0, 0, 0.3);
-            color: white;
-            font-size: 1.1rem;
-            margin-bottom: 20px;
-            text-align: center;
-            outline: none;
+        /* Menu Burger Mobile */
+        .burger-container {
+            position: relative;
         }
 
-        input[type="text"]:focus {
-            border-color: #ff007f;
-        }
-
-        .btn {
-            width: 100%;
-            padding: 15px;
-            border-radius: 12px;
-            border: none;
-            background: linear-gradient(45deg, #ff007f, #7928ca);
-            color: white;
-            font-size: 1.1rem;
-            font-weight: bold;
-            cursor: pointer;
-            box-shadow: 0 4px 15px rgba(255, 0, 127, 0.4);
-            transition: transform 0.1s;
-        }
-
-        .btn:active {
-            transform: scale(0.98);
-        }
-
-        .waiting-screen {
-            text-align: center;
-        }
-
-        .waiting-spinner {
-            width: 60px;
-            height: 60px;
-            border: 4px solid rgba(255,255,255,0.1);
-            border-top: 4px solid #ff007f;
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-            margin: 0 auto 20px auto;
-        }
-
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-
-        .game-screen {
-            justify-content: space-between;
-            padding: 20px 0;
-            height: 100%;
-        }
-
-        .game-header {
-            text-align: center;
-            margin-bottom: 10px;
-        }
-
-        .game-header p {
-            color: #a0aec0;
-            font-size: 0.9rem;
-            margin-bottom: 5px;
-        }
-
-        .mobile-timer {
-            font-size: 2.5rem;
-            font-weight: 900;
-            color: #ff007f;
-            margin: 5px 0;
-        }
-
-        .choices-container {
-            width: 100%;
-            flex: 1;
+        .burger-btn {
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            width: 38px;
+            height: 38px;
+            border-radius: 8px;
             display: flex;
             flex-direction: column;
-            gap: 12px;
             justify-content: center;
+            align-items: center;
+            gap: 4px;
+            cursor: pointer;
         }
 
-        .choice-btn {
+        .burger-btn span {
+            display: block;
+            width: 18px;
+            height: 2px;
+            background: white;
+            border-radius: 2px;
+        }
+
+        .burger-menu {
+            position: absolute;
+            right: 0;
+            top: 48px;
+            background: #151b2b;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 14px;
+            width: 280px;
+            max-height: 80vh;
+            overflow-y: auto;
+            padding: 15px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.6);
+            display: none;
+            flex-direction: column;
+            gap: 12px;
+            z-index: 100;
+        }
+
+        .burger-menu.open {
+            display: flex;
+        }
+
+        .menu-item {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .menu-item label {
+            font-size: 0.85rem;
+            color: #a0aec0;
+            font-weight: 500;
+        }
+
+        .menu-search-input, .menu-password-input {
+            padding: 8px 12px;
+            border-radius: 8px;
+            border: 1px solid rgba(255,255,255,0.2);
+            background: rgba(0,0,0,0.3);
+            color: white;
+            font-size: 0.85rem;
+            outline: none;
             width: 100%;
-            min-height: 75px;
-            border-radius: 16px;
-            border: none;
-            color: #ffffff;
-            font-size: 1rem;
-            font-weight: bold;
-            padding: 12px;
+        }
+
+        .menu-action-btn {
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: white;
+            padding: 8px 12px;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 0.85rem;
             cursor: pointer;
+            text-align: left;
+            transition: background 0.2s;
+        }
+
+        .menu-action-btn:hover {
+            background: rgba(255, 255, 255, 0.15);
+        }
+
+        .menu-action-btn.danger {
+            color: #ff6b6b;
+            border-color: rgba(255, 107, 107, 0.3);
+        }
+
+        .menu-action-btn.danger:hover {
+            background: rgba(255, 107, 107, 0.15);
+        }
+
+        .menu-action-btn.admin-master {
+            background: #7928ca;
+            border-color: #ff007f;
+            text-align: center;
+        }
+
+        .favorites-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            max-height: 100px;
+            overflow-y: auto;
+        }
+
+        .fav-pill {
+            background: rgba(121, 40, 202, 0.25);
+            border: 1px solid rgba(121, 40, 202, 0.5);
+            color: #fff;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            cursor: pointer;
+        }
+
+        .menu-divider {
+            height: 1px;
+            background: rgba(255, 255, 255, 0.1);
+            margin: 4px 0;
+        }
+
+        /* Panneau Admin caché par défaut dans le menu */
+        #admin-controls-section {
+            display: none;
+            flex-direction: column;
+            gap: 8px;
+            background: rgba(121, 40, 202, 0.1);
+            padding: 10px;
+            border-radius: 10px;
+            border: 1px dashed rgba(121, 40, 202, 0.4);
+        }
+
+        /* Modale personnalisée mobile */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(11, 15, 25, 0.85);
+            backdrop-filter: blur(5px);
             display: flex;
             align-items: center;
             justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.2s ease;
+        }
+
+        .modal-overlay.open {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .modal-card {
+            background: #151b2b;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 16px;
+            padding: 20px;
+            width: 85%;
+            max-width: 320px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.6);
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
             text-align: center;
-            box-shadow: 0 8px 20px rgba(0,0,0,0.3);
-            transition: transform 0.1s, filter 0.2s;
+        }
+
+        .modal-title {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: #ffffff;
+        }
+
+        .modal-message {
+            font-size: 0.9rem;
+            color: #a0aec0;
+            line-height: 1.4;
+        }
+
+        .modal-buttons {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+        }
+
+        .modal-btn {
+            flex: 1;
+            padding: 10px;
+            border-radius: 10px;
+            font-weight: 600;
+            font-size: 0.85rem;
+            cursor: pointer;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            background: rgba(255, 255, 255, 0.08);
+            color: white;
+        }
+
+        .modal-btn.primary {
+            background: #7928ca;
+            border-color: #ff007f;
+        }
+
+        .modal-btn.danger {
+            background: #e53e3e;
+            border-color: #f56565;
+        }
+
+        main {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            padding: 20px;
+            position: relative;
+            overflow-y: auto;
+        }
+
+        /* Écran de Connexion */
+        #login-screen {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            justify-content: center;
+            align-items: center;
+            height: 100%;
+            max-width: 320px;
+            margin: 0 auto;
+            width: 100%;
+        }
+
+        .input-group {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .input-group label {
+            font-size: 0.9rem;
+            color: #a0aec0;
+        }
+
+        .input-group input {
+            width: 100%;
+            padding: 14px;
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            background: rgba(255, 255, 255, 0.05);
+            color: white;
+            font-size: 1rem;
+            outline: none;
+        }
+
+        .avatar-preview-box {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+            background: rgba(255, 255, 255, 0.05);
+            padding: 15px;
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .cartoon-avatar-display {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background-size: cover;
+            background-position: center;
+            border: 2px solid #ff007f;
+            background-color: #1a202c;
+        }
+
+        .color-selection {
+            display: flex;
+            justify-content: space-between;
+            width: 100%;
+            gap: 8px;
+        }
+
+        .color-option {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            cursor: pointer;
+            border: 3px solid transparent;
+            transition: transform 0.2s, border-color 0.2s;
+        }
+
+        .color-option.selected {
+            border-color: #ffffff;
+            transform: scale(1.15);
+        }
+
+        .btn-primary {
+            width: 100%;
+            padding: 14px;
+            border-radius: 12px;
+            background: linear-gradient(45deg, #ff007f, #7928ca);
+            color: white;
+            border: none;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 5px 20px rgba(121, 40, 202, 0.4);
+        }
+
+        /* Écran de Jeu */
+        #game-screen {
+            display: none;
+            flex-direction: column;
+            height: 100%;
+            gap: 15px;
+        }
+
+        /* Pastille de score du joueur (style plateau télé) */
+        .player-pill-container {
+            display: flex;
+            align-items: center;
+            padding: 12px 16px;
+            border-radius: 14px;
+            background: rgba(25, 30, 45, 0.95);
+            border: 2.5px solid var(--player-color, #7928ca);
+            box-shadow: 0 0 15px 2px var(--player-glow, rgba(121, 40, 202, 0.6));
+            justify-content: space-between;
+        }
+
+        .player-profile-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .player-avatar-badge {
+            width: 42px;
+            height: 42px;
+            border-radius: 50%;
+            background-size: cover;
+            background-position: center;
+            border: 2px solid white;
+            background-color: #1a202c;
+        }
+
+        .player-name-text {
+            font-weight: 700;
+            font-size: 1.05rem;
+            color: white;
+        }
+
+        .player-score-badge {
+            font-weight: 900;
+            font-size: 1.1rem;
+            color: var(--player-color, #ff007f);
+        }
+
+        .game-board {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .timer-circle {
+            font-size: 1.8rem;
+            font-weight: 800;
+            color: #a0aec0;
+            margin-bottom: 5px;
+        }
+
+        .choices-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 12px;
+            width: 100%;
+            max-width: 400px;
+        }
+
+        .choice-btn {
+            background: rgba(25, 30, 45, 0.9);
+            border: 2px solid rgba(255, 255, 255, 0.15);
+            color: white;
+            padding: 16px;
+            border-radius: 14px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            text-align: center;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
         }
 
         .choice-btn:active:not(:disabled) {
-            transform: scale(0.96);
+            transform: scale(0.97);
+        }
+
+        .choice-btn.selected {
+            background: #7928ca;
+            border-color: #ff007f;
+            box-shadow: 0 0 20px rgba(121, 40, 202, 0.6);
         }
 
         .choice-btn:disabled {
-            opacity: 0.6;
             cursor: not-allowed;
         }
 
-        .btn-pink { background: linear-gradient(135deg, #ff007f, #d60068); }
-        .btn-orange { background: linear-gradient(135deg, #ff7b00, #e06c00); }
-        .btn-yellow { background: linear-gradient(135deg, #ffd700, #cca300); color: #0b0f19; }
-        .btn-purple { background: linear-gradient(135deg, #7928ca, #5b1b9e); }
-
-        .player-status-footer {
-            text-align: center;
-            font-size: 0.9rem;
+        .waiting-message {
+            font-size: 1.1rem;
             color: #a0aec0;
-            padding-top: 10px;
+            text-align: center;
+            font-weight: 500;
+            padding: 20px;
         }
     </style>
 </head>
 <body>
 
-    <!-- Écran de connexion (seul affiché initialement : pas de choix visibles) -->
-    <div id="screen-login" class="screen">
-        <div class="login-card">
-            <h2>Rejoindre le Blind Test</h2>
-            <input type="text" id="pseudo-input" placeholder="Entre ton pseudo..." maxlength="15" autocomplete="off">
-            <button class="btn" onclick="joinGame()">C'est parti !</button>
+    <header>
+        <h1>Blind Test</h1>
+        
+        <div class="header-right" id="header-menu-container" style="display: none;">
+            <!-- Menu Burger Mobile -->
+            <div class="burger-container">
+                <div class="burger-btn" onclick="playClickSound(); toggleBurgerMenu();">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </div>
+                <div class="burger-menu" id="burger-dropdown">
+                    <!-- Bouton Maître du jeu -->
+                    <button class="menu-action-btn admin-master" onclick="playClickSound(); promptAdminPassword()">Maître du jeu</button>
+
+                    <!-- Section Admin (cachée par défaut) -->
+                    <div id="admin-controls-section">
+                        <label style="font-size: 0.8rem; color: #ff007f; font-weight: bold;">CONTRÔLE MAÎTRE DU JEU</label>
+                        <button class="menu-action-btn" style="background: #22c55e; border-color: #22c55e; text-align: center; font-weight: bold;" onclick="playClickSound(); triggerNextRoundMaster()">Morceau suivant</button>
+                        
+                        <div class="menu-divider"></div>
+                        <label>Rechercher une playlist :</label>
+                        <input type="text" id="burger-search-input" class="menu-search-input" placeholder="Ex: rock, 80s...">
+                        <button class="menu-action-btn" onclick="playClickSound(); searchFromBurger()">Charger la recherche</button>
+                        
+                        <div class="menu-divider"></div>
+                        <label>Playlists favorites :</label>
+                        <div class="favorites-container" id="favorites-list"></div>
+                        <button class="menu-action-btn" style="font-size: 0.75rem; padding: 5px;" onclick="playClickSound(); addCurrentQueryToFavorites()">Ajouter aux favoris</button>
+
+                        <div class="menu-divider"></div>
+                        <button class="menu-action-btn" onclick="playClickSound(); masterResetScores()">Remettre scores à 0</button>
+                        <button class="menu-action-btn danger" onclick="playClickSound(); masterStopGame()">Arrêter la partie</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Modale de dialogue personnalisée -->
+    <div class="modal-overlay" id="custom-modal">
+        <div class="modal-card">
+            <div class="modal-title" id="modal-title">Information</div>
+            <div class="modal-message" id="modal-message">Message</div>
+            <div class="modal-buttons" id="modal-buttons">
+                <!-- Boutons injectés dynamiquement -->
+            </div>
         </div>
     </div>
 
-    <!-- Écran d'attente après validation du pseudo -->
-    <div id="screen-waiting" class="screen hidden">
-        <div class="waiting-screen">
-            <div class="waiting-spinner"></div>
-            <h2 id="welcome-msg" style="margin-bottom: 10px;">Tu es dans la partie !</h2>
-            <p style="color: #a0aec0;">Attente du lancement par l'hôte sur la TV...</p>
-        </div>
-    </div>
+    <main>
+        <!-- ÉCRAN DE CONNEXION -->
+        <div id="login-screen">
+            <div class="input-group">
+                <label>Ton Pseudo</label>
+                <input type="text" id="player-name-input" placeholder="Ex: Alex" maxlength="15" oninput="updateCartoonAvatar()">
+            </div>
 
-    <!-- Écran de jeu (affiché uniquement une fois le pseudo validé ET la partie lancée) -->
-    <div id="screen-game" class="screen game-screen hidden">
-        <div class="game-header">
-            <p>Temps restant :</p>
-            <div class="mobile-timer" id="mobile-timer-display">15</div>
+            <div class="input-group">
+                <label>Ton Avatar Cartoon (généré auto)</label>
+                <div class="avatar-preview-box">
+                    <div class="cartoon-avatar-display" id="preview-avatar"></div>
+                    <span style="font-size: 0.85rem; color: #a0aec0;">Change ton pseudo pour modifier ton personnage !</span>
+                </div>
+            </div>
+
+            <div class="input-group">
+                <label>Choisis ta Couleur</label>
+                <div class="color-selection" id="color-container"></div>
+            </div>
+
+            <button class="btn-primary" onclick="playClickSound(); joinGame()">Rejoindre la partie</button>
         </div>
 
-        <div class="choices-container">
-            <button class="choice-btn btn-pink" onclick="sendAnswer(0)" id="choice-0">Chargement...</button>
-            <button class="choice-btn btn-orange" onclick="sendAnswer(1)" id="choice-1">Chargement...</button>
-            <button class="choice-btn btn-yellow" onclick="sendAnswer(2)" id="choice-2">Chargement...</button>
-            <button class="choice-btn btn-purple" onclick="sendAnswer(3)" id="choice-3">Chargement...</button>
-        </div>
+        <!-- ÉCRAN DE JEU -->
+        <div id="game-screen">
+            <!-- Pastille de score personnelle du joueur -->
+            <div class="player-pill-container" id="my-player-pill">
+                <div class="player-profile-left">
+                    <div class="player-avatar-badge" id="display-avatar"></div>
+                    <div class="player-name-text" id="display-name">Nom</div>
+                </div>
+                <div class="player-score-badge" id="display-score">0 pts</div>
+            </div>
 
-        <div class="player-status-footer" id="answer-feedback">
-            Choisis la bonne réponse !
+            <div class="game-board" id="game-board-content">
+                <div class="waiting-message" id="waiting-text">En attente du lancement de la partie par la TV...</div>
+            </div>
         </div>
-    </div>
+    </main>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getDatabase, ref, set, update, onValue } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+        import { getDatabase, ref, set, update, onValue, get } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyC009nu3gKCkZczF_7w5Iqf9aUMd-TRsBM",
@@ -241,85 +574,284 @@
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
 
-        const rainbowColors = [
-            "#FF0055", "#FF5500", "#FFAA00", "#00CC66", "#00CCCC", 
-            "#0066FF", "#7B00FF", "#FF00AA", "#55FF00", "#00FFCC"
-        ];
+        window.playClickSound = function() {
+            try {
+                const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(600, audioCtx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(200, audioCtx.currentTime + 0.04);
+                
+                gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.04);
+                
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                
+                osc.start();
+                osc.stop(audioCtx.currentTime + 0.04);
+            } catch(e) {}
+        };
 
-        let playerId = "player_" + Math.random().toString(36).substr(2, 9);
-        let playerColor = rainbowColors[Math.floor(Math.random() * rainbowColors.length)];
-        let hasAnsweredCurrentRound = false;
-        let lastTrackIndex = null;
-        let isRegistered = false;
+        window.showAlertModal = function(title, message) {
+            const overlay = document.getElementById('custom-modal');
+            document.getElementById('modal-title').textContent = title;
+            document.getElementById('modal-message').textContent = message;
+            
+            const btnContainer = document.getElementById('modal-buttons');
+            btnContainer.innerHTML = '';
+
+            const okBtn = document.createElement('button');
+            okBtn.className = 'modal-btn primary';
+            okBtn.textContent = "OK";
+            okBtn.onclick = () => { playClickSound(); overlay.classList.remove('open'); };
+            btnContainer.appendChild(okBtn);
+
+            overlay.classList.add('open');
+        };
+
+        window.toggleBurgerMenu = function() {
+            const dropdown = document.getElementById('burger-dropdown');
+            dropdown.classList.toggle('open');
+        };
+
+        // Générateur d'avatar cartoon auto (via DiceBear avataaars ou bottts)
+        function getCartoonAvatarUrl(seed) {
+            const safeSeed = seed && seed.trim() !== "" ? seed.trim() : "player";
+            return `https://api.dicebear.com/7.x/bottts/svg?seed=${encodeURIComponent(safeSeed)}`;
+        }
+
+        window.updateCartoonAvatar = function() {
+            const name = document.getElementById('player-name-input').value;
+            const url = getCartoonAvatarUrl(name);
+            document.getElementById('preview-avatar').style.backgroundImage = `url('${url}')`;
+        };
+
+        const colors = ["#ff007f", "#7928ca", "#22c55e", "#3b82f6", "#eab308", "#ef4444"];
+        let selectedColor = colors[0];
+        let playerId = localStorage.getItem('blindtest_player_id') || 'player_' + Math.random().toString(36.2).substring(2, 9);
+        localStorage.setItem('blindtest_player_id', playerId);
+
+        const colorContainer = document.getElementById('color-container');
+        colors.forEach((col, idx) => {
+            const div = document.createElement('div');
+            div.className = `color-option ${idx === 0 ? 'selected' : ''}`;
+            div.style.backgroundColor = col;
+            div.onclick = () => {
+                playClickSound();
+                document.querySelectorAll('.color-option').forEach(el => el.classList.remove('selected'));
+                div.classList.add('selected');
+                selectedColor = col;
+            };
+            colorContainer.appendChild(div);
+        });
+
+        // Initialisation aperçu avatar cartoon
+        window.updateCartoonAvatar();
 
         window.joinGame = function() {
-            const pseudo = document.getElementById('pseudo-input').value.trim();
-            if (!pseudo) {
-                alert("Entre un pseudo valide !");
+            const nameInput = document.getElementById('player-name-input').value.trim();
+            if (!nameInput) {
+                window.showAlertModal("Attention", "Veuillez entrer un pseudo !");
                 return;
             }
 
-            set(ref(db, 'players/' + playerId), {
-                name: pseudo,
+            const avatarUrl = getCartoonAvatarUrl(nameInput);
+
+            const playerRef = ref(db, 'players/' + playerId);
+            set(playerRef, {
+                name: nameInput,
+                avatar: avatarUrl,
+                color: selectedColor,
                 score: 0,
-                color: playerColor,
                 answered: false,
-                scoredThisRound: false,
                 lastChoice: null,
-                avatar: "https://i.pravatar.cc/150?img=" + Math.floor(Math.random() * 70)
+                lastEarnedPoints: 0
             }).then(() => {
-                isRegistered = true;
-                document.getElementById('screen-login').classList.add('hidden');
-                document.getElementById('screen-waiting').classList.remove('hidden');
-                document.getElementById('welcome-msg').textContent = `Bienvenue, ${pseudo} !`;
+                document.getElementById('login-screen').style.display = 'none';
+                document.getElementById('game-screen').style.display = 'flex';
+                document.getElementById('header-menu-container').style.display = 'flex';
+                
+                document.getElementById('display-name').textContent = nameInput;
+                document.getElementById('display-avatar').style.backgroundImage = `url('${avatarUrl}')`;
+                
+                // Appliquer les couleurs sur la pastille personnelle du joueur
+                const pill = document.getElementById('my-player-pill');
+                let glowColor = 'rgba(121, 40, 202, 0.6)';
+                if (selectedColor.startsWith('#') && selectedColor.length === 7) {
+                    let r = parseInt(selectedColor.slice(1, 3), 16);
+                    let g = parseInt(selectedColor.slice(3, 5), 16);
+                    let b = parseInt(selectedColor.slice(5, 7), 16);
+                    glowColor = `rgba(${r}, ${g}, ${b}, 0.6)`;
+                }
+                pill.style.setProperty('--player-color', selectedColor);
+                pill.style.setProperty('--player-glow', glowColor);
+
+                listenToGameState();
+                listenToPersonalScore();
+                renderFavorites();
             });
         };
 
-        const gameStateRef = ref(db, 'gameState');
-        onValue(gameStateRef, (snapshot) => {
-            const state = snapshot.val();
-            if (state && isRegistered) {
-                if (state.status === 'playing') {
-                    document.getElementById('screen-waiting').classList.add('hidden');
-                    document.getElementById('screen-game').classList.remove('hidden');
-                    
-                    if (state.trackIndex !== lastTrackIndex) {
-                        lastTrackIndex = state.trackIndex;
-                        hasAnsweredCurrentRound = false;
-                        document.getElementById('answer-feedback').textContent = "À toi de jouer !";
-                        for (let i = 0; i < 4; i++) {
-                            document.getElementById(`choice-${i}`).disabled = false;
-                        }
-                    }
-
-                    if (state.timeLeft !== undefined) {
-                        document.getElementById('mobile-timer-display').textContent = state.timeLeft;
-                    }
-
-                    if (state.choices) {
-                        for (let i = 0; i < 4; i++) {
-                            document.getElementById(`choice-${i}`).textContent = state.choices[i];
-                        }
-                    }
+        function listenToPersonalScore() {
+            onValue(ref(db, 'players/' + playerId), (snapshot) => {
+                const data = snapshot.val();
+                if (data) {
+                    document.getElementById('display-score').textContent = `${data.score || 0} pts`;
                 }
+            });
+        }
+
+        // --- GESTION DU MODE MAÎTRE DU JEU (ADMIN) ---
+        window.promptAdminPassword = function() {
+            const overlay = document.getElementById('custom-modal');
+            document.getElementById('modal-title').textContent = "Accès Maître du jeu";
+            document.getElementById('modal-message').innerHTML = `Entrez le mot de passe administrateur :<br><br><input type="password" id="admin-pwd-input" class="menu-password-input" placeholder="Mot de passe">`;
+            
+            const btnContainer = document.getElementById('modal-buttons');
+            btnContainer.innerHTML = '';
+
+            const cancelBtn = document.createElement('button');
+            cancelBtn.className = 'modal-btn';
+            cancelBtn.textContent = "Annuler";
+            cancelBtn.onclick = () => { playClickSound(); overlay.classList.remove('open'); };
+            btnContainer.appendChild(cancelBtn);
+
+            const valBtn = document.createElement('button');
+            valBtn.className = 'modal-btn primary';
+            valBtn.textContent = "Valider";
+            valBtn.onclick = () => {
+                playClickSound();
+                const pwd = document.getElementById('admin-pwd-input').value;
+                if (pwd === "admin") {
+                    overlay.classList.remove('open');
+                    document.getElementById('admin-controls-section').style.display = 'flex';
+                    window.showAlertModal("Succès", "Mode Maître du jeu activé !");
+                } else {
+                    overlay.classList.remove('open');
+                    window.showAlertModal("Erreur", "Mot de passe incorrect.");
+                }
+            };
+            btnContainer.appendChild(valBtn);
+
+            overlay.classList.add('open');
+        };
+
+        window.triggerNextRoundMaster = function() {
+            // Déclenche le passage au morceau suivant sur la TV
+            set(ref(db, 'gameState/remoteAction'), { type: 'next', timestamp: Date.now() });
+            toggleBurgerMenu();
+        };
+
+        window.masterResetScores = function() {
+            get(ref(db, 'players')).then((snapshot) => {
+                const players = snapshot.val();
+                if (players) {
+                    Object.keys(players).forEach(id => {
+                        update(ref(db, 'players/' + id), { score: 0, answered: false, lastChoice: null, lastEarnedPoints: 0 });
+                    });
+                    window.showAlertModal("Scores", "Tous les scores ont été remis à zéro.");
+                }
+            });
+            toggleBurgerMenu();
+        };
+
+        window.masterStopGame = function() {
+            set(ref(db, 'gameState/remoteAction'), { type: 'stop', timestamp: Date.now() });
+            window.showAlertModal("Partie", "La partie a été arrêtée.");
+            toggleBurgerMenu();
+        };
+
+        // --- FAVORIS ET RECHERCHE ADMIN ---
+        const defaultFavorites = ["variete francaise", "annees 80", "rock", "disney", "hits 2024"];
+        
+        function getFavorites() {
+            let saved = localStorage.getItem('blindtest_favs');
+            return saved ? JSON.parse(saved) : defaultFavorites;
+        }
+
+        function saveFavorites(favs) {
+            localStorage.setItem('blindtest_favs', JSON.stringify(favs));
+            renderFavorites();
+        }
+
+        window.renderFavorites = function() {
+            const container = document.getElementById('favorites-list');
+            if (!container) return;
+            const favs = getFavorites();
+            container.innerHTML = '';
+
+            favs.forEach(fav => {
+                const pill = document.createElement('div');
+                pill.className = 'fav-pill';
+                pill.textContent = fav;
+                pill.onclick = () => {
+                    playClickSound();
+                    document.getElementById('burger-search-input').value = fav;
+                    searchFromBurger();
+                };
+                container.appendChild(pill);
+            });
+        };
+
+        window.searchFromBurger = function() {
+            const query = document.getElementById('burger-search-input').value.trim();
+            if (!query) return;
+            set(ref(db, 'gameState/remoteQuery'), query);
+            window.showAlertModal("Recherche", `La playlist "${query}`} a été transmise à la TV.`);
+            toggleBurgerMenu();
+        };
+
+        window.addCurrentQueryToFavorites = function() {
+            const query = document.getElementById('burger-search-input').value.trim();
+            if (!query) {
+                window.showAlertModal("Attention", "Veuillez entrer un terme de recherche.");
+                return;
             }
-        });
-
-        window.sendAnswer = function(choiceIndex) {
-            if (hasAnsweredCurrentRound) return;
-            hasAnsweredCurrentRound = true;
-
-            for (let i = 0; i < 4; i++) {
-                document.getElementById(`choice-${i}`).disabled = true;
+            let favs = getFavorites();
+            if (!favs.includes(query)) {
+                favs.push(query);
+                saveFavorites(favs);
+                window.showAlertModal("Succès", `"${query}" ajouté aux favoris.`);
+            } else {
+                window.showAlertModal("Information", "Déjà dans les favoris.");
             }
+        };
 
-            document.getElementById('answer-feedback').textContent = "Réponse enregistrée !";
+        function listenToGameState() {
+            onValue(ref(db, 'gameState'), (snapshot) => {
+                const state = snapshot.val();
+                const board = document.getElementById('game-board-content');
+                
+                if (!state || state.status !== 'playing') {
+                    board.innerHTML = `<div class="waiting-message">En attente du prochain morceau...</div>`;
+                    return;
+                }
+
+                let html = `<div class="timer-circle" id="live-timer">${state.timeLeft || 15}</div>`;
+                html += `<div class="choices-grid">`;
+                
+                state.choices.forEach((choice, index) => {
+                    html += `<button class="choice-btn" id="choice-${index}" onclick="playClickSound(); makeChoice(${index})">${choice}</button>`;
+                });
+                
+                html += `</div>`;
+                board.innerHTML = html;
+            });
+        }
+
+        window.makeChoice = function(choiceIndex) {
+            const buttons = document.querySelectorAll('.choice-btn');
+            buttons.forEach(btn => btn.disabled = true);
+            
+            const clickedBtn = document.getElementById(`choice-${choiceIndex}`);
+            if (clickedBtn) clickedBtn.classList.add('selected');
 
             update(ref(db, 'players/' + playerId), {
                 answered: true,
-                scoredThisRound: false,
-                lastChoice: choiceIndex,
-                answerTimestamp: Date.now()
+                lastChoice: choiceIndex
             });
         };
     </script>
