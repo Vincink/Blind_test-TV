@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Blind Test - TV Board</title>
+    <title>Blind Test</title>
     <style>
         * {
             box-sizing: border-box;
@@ -318,13 +318,15 @@
             line-height: 1;
         }
 
+        /* Révélation du titre et de l'artiste replacée proprement au centre */
         .track-info-preview {
-            margin-top: 5px;
-            font-size: 1.1rem;
-            color: #e2e8f0;
-            font-weight: 600;
+            margin-top: 10px;
+            font-size: 1.4rem;
+            color: #ffffff;
+            font-weight: 700;
             text-align: center;
-            min-height: 30px;
+            min-height: 40px;
+            text-shadow: 0 2px 10px rgba(0,0,0,0.5);
         }
 
         .right-zone {
@@ -360,7 +362,6 @@
             font-weight: bold;
         }
 
-        /* Bouton compact dans l'en-tête (Vert initial, puis Violet) */
         .compact-action-btn {
             background: #22c55e;
             color: white;
@@ -393,7 +394,7 @@
             padding-right: 5px;
         }
 
-        /* Conteneur de ligne joueur avec masquage strict par défaut (pas de poubelle visible) */
+        /* Masquage rigoureux de la poubelle par défaut (overflow hidden) */
         .player-row-wrapper {
             position: relative;
             overflow: hidden;
@@ -520,6 +521,7 @@
                 <div class="counter-wrapper">
                     <div class="big-counter" id="big-counter">--</div>
                 </div>
+                <!-- Révélation déplacée et centrée ici -->
                 <div class="track-info-preview" id="track-info-preview"></div>
             </div>
 
@@ -755,7 +757,6 @@
         function startNextRound() {
             if (!gameHasStarted) {
                 gameHasStarted = true;
-                // Passage du bouton vert au violet « Morceau suivant » dans l'en-tête
                 document.getElementById('start-btn-text').textContent = "Morceau suivant";
                 document.getElementById('start-btn').classList.add('playing-state');
             }
@@ -863,8 +864,8 @@
                     document.getElementById('vinyl-disc').classList.remove('playing');
                     
                     document.getElementById('status-label').textContent = "C'était :";
+                    document.getElementById('big-counter').textContent = ""; // Supprime le gros compteur / icône cible
                     document.getElementById('track-info-preview').textContent = `${track.artistName} - ${track.trackName}`;
-                    document.getElementById('big-counter').textContent = "🎯";
                 }
             }, 100);
         }
