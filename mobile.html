@@ -186,6 +186,7 @@
 </head>
 <body>
 
+    <!-- Écran de connexion (seul affiché initialement : pas de choix visibles) -->
     <div id="screen-login" class="screen">
         <div class="login-card">
             <h2>Rejoindre le Blind Test</h2>
@@ -194,6 +195,7 @@
         </div>
     </div>
 
+    <!-- Écran d'attente après validation du pseudo -->
     <div id="screen-waiting" class="screen hidden">
         <div class="waiting-screen">
             <div class="waiting-spinner"></div>
@@ -202,6 +204,7 @@
         </div>
     </div>
 
+    <!-- Écran de jeu (affiché uniquement une fois le pseudo validé ET la partie lancée) -->
     <div id="screen-game" class="screen game-screen hidden">
         <div class="game-header">
             <p>Temps restant :</p>
@@ -247,6 +250,7 @@
         let playerColor = rainbowColors[Math.floor(Math.random() * rainbowColors.length)];
         let hasAnsweredCurrentRound = false;
         let lastTrackIndex = null;
+        let isRegistered = false;
 
         window.joinGame = function() {
             const pseudo = document.getElementById('pseudo-input').value.trim();
@@ -264,6 +268,7 @@
                 lastChoice: null,
                 avatar: "https://i.pravatar.cc/150?img=" + Math.floor(Math.random() * 70)
             }).then(() => {
+                isRegistered = true;
                 document.getElementById('screen-login').classList.add('hidden');
                 document.getElementById('screen-waiting').classList.remove('hidden');
                 document.getElementById('welcome-msg').textContent = `Bienvenue, ${pseudo} !`;
@@ -273,7 +278,7 @@
         const gameStateRef = ref(db, 'gameState');
         onValue(gameStateRef, (snapshot) => {
             const state = snapshot.val();
-            if (state) {
+            if (state && isRegistered) {
                 if (state.status === 'playing') {
                     document.getElementById('screen-waiting').classList.add('hidden');
                     document.getElementById('screen-game').classList.remove('hidden');
@@ -293,7 +298,7 @@
                         document.getElementById('mobile-timer-display').textContent = state.timeLeft;
                     }
 
-                    // Afficher uniquement les réponses épurées
+                    // Afficher uniquement les réponses épurées (artiste - titre)
                     if (state.choices) {
                         for (let i = 0; i < 4; i++) {
                             document.getElementById(`choice-${i}`).textContent = state.choices[i];
