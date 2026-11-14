@@ -55,6 +55,7 @@
             align-items: center;
             gap: 4px;
             cursor: pointer;
+            touch-action: manipulation;
         }
 
         .burger-btn span {
@@ -120,12 +121,13 @@
             background: rgba(255, 255, 255, 0.08);
             border: 1px solid rgba(255, 255, 255, 0.15);
             color: white;
-            padding: 6px;
+            padding: 8px;
             border-radius: 6px;
             font-weight: 600;
             font-size: 0.85rem;
             cursor: pointer;
             text-align: center;
+            touch-action: manipulation;
         }
 
         .target-btn.active {
@@ -137,13 +139,14 @@
             background: rgba(255, 255, 255, 0.08);
             border: 1px solid rgba(255, 255, 255, 0.1);
             color: white;
-            padding: 8px 12px;
+            padding: 10px 12px;
             border-radius: 8px;
             font-weight: 600;
             font-size: 0.85rem;
             cursor: pointer;
             text-align: left;
             transition: background 0.2s;
+            touch-action: manipulation;
         }
 
         .menu-action-btn:hover {
@@ -173,19 +176,21 @@
             background: rgba(121, 40, 202, 0.25);
             border: 1px solid rgba(121, 40, 202, 0.5);
             color: #fff;
-            padding: 4px 8px;
+            padding: 6px 10px;
             border-radius: 20px;
             font-size: 0.75rem;
             cursor: pointer;
             display: flex;
             align-items: center;
-            gap: 4px;
+            gap: 6px;
+            touch-action: manipulation;
         }
 
         .fav-pill .delete-fav {
-            font-size: 0.65rem;
+            font-size: 0.75rem;
             color: #ff6b6b;
             cursor: pointer;
+            font-weight: bold;
         }
 
         .menu-divider {
@@ -261,24 +266,20 @@
 
         .modal-btn {
             flex: 1;
-            padding: 10px;
+            padding: 12px;
             border-radius: 10px;
             font-weight: 600;
-            font-size: 0.85rem;
+            font-size: 0.9rem;
             cursor: pointer;
             border: 1px solid rgba(255, 255, 255, 0.15);
             background: rgba(255, 255, 255, 0.08);
             color: white;
+            touch-action: manipulation;
         }
 
         .modal-btn.primary {
             background: #7928ca;
             border-color: #ff007f;
-        }
-
-        .modal-btn.danger {
-            background: #e53e3e;
-            border-color: #f56565;
         }
 
         main {
@@ -358,6 +359,7 @@
             font-weight: bold;
             cursor: pointer;
             box-shadow: 0 5px 20px rgba(121, 40, 202, 0.4);
+            touch-action: manipulation;
         }
 
         /* Écran de Jeu */
@@ -443,6 +445,7 @@
             transition: all 0.15s ease;
             text-align: center;
             box-shadow: 0 6px 20px rgba(0,0,0,0.4);
+            touch-action: manipulation;
         }
 
         .choice-btn:active:not(:disabled) {
@@ -491,6 +494,7 @@
             cursor: pointer;
             box-shadow: 0 10px 25px rgba(34, 197, 94, 0.5);
             text-align: center;
+            touch-action: manipulation;
         }
     </style>
 </head>
@@ -534,7 +538,7 @@
                         <div class="menu-divider"></div>
                         <label>Playlists favorites :</label>
                         <div class="favorites-container" id="favorites-list"></div>
-                        <button class="menu-action-btn" style="font-size: 0.75rem; padding: 5px;" onclick="playClickSound(); addCurrentQueryToFavorites()">Ajouter aux favoris</button>
+                        <button class="menu-action-btn" style="font-size: 0.75rem; padding: 6px;" onclick="playClickSound(); addCurrentQueryToFavorites()">Ajouter aux favoris</button>
 
                         <div class="menu-divider"></div>
                         <button class="menu-action-btn" onclick="playClickSound(); masterResetScores()">Remettre scores à 0</button>
