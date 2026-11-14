@@ -804,10 +804,9 @@
                 gameHasStartedMaster = true;
                 document.getElementById('master-main-btn').textContent = "Morceau suivant";
                 document.getElementById('master-main-btn').style.background = "#7928ca";
-                set(ref(db, 'gameState/remoteAction'), { type: 'next', timestamp: Date.now() });
-            } else {
-                set(ref(db, 'gameState/remoteAction'), { type: 'next', timestamp: Date.now() });
             }
+            // Utilisation directe de nextSong pour déclencher le morceau sur la TV
+            set(ref(db, 'gameState/nextSong'), Date.now());
         };
 
         window.masterResetScores = function() {
@@ -827,7 +826,7 @@
             gameHasStartedMaster = true;
             document.getElementById('master-main-btn').textContent = "Morceau suivant";
             document.getElementById('master-main-btn').style.background = "#7928ca";
-            set(ref(db, 'gameState/remoteAction'), { type: 'relaunch', timestamp: Date.now() });
+            set(ref(db, 'gameState/nextSong'), Date.now());
             window.showAlertModal("Partie", "Nouvelle partie lancée !");
             toggleBurgerMenu();
         };
@@ -836,7 +835,7 @@
             gameHasStartedMaster = false;
             document.getElementById('master-main-btn').textContent = "Démarrer la partie";
             document.getElementById('master-main-btn').style.background = "#22c55e";
-            set(ref(db, 'gameState/remoteAction'), { type: 'stop', timestamp: Date.now() });
+            set(ref(db, 'gameState/status'), 'stopped');
             window.showAlertModal("Partie", "Partie arrêtée.");
             toggleBurgerMenu();
         };
