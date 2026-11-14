@@ -166,7 +166,6 @@
             margin: 4px 0;
         }
 
-        /* Panneau Admin caché par défaut dans le menu */
         #admin-controls-section {
             display: none;
             flex-direction: column;
@@ -320,27 +319,6 @@
             background-color: #1a202c;
         }
 
-        .color-selection {
-            display: flex;
-            justify-content: space-between;
-            width: 100%;
-            gap: 8px;
-        }
-
-        .color-option {
-            width: 36px;
-            height: 36px;
-            border-radius: 50%;
-            cursor: pointer;
-            border: 3px solid transparent;
-            transition: transform 0.2s, border-color 0.2s;
-        }
-
-        .color-option.selected {
-            border-color: #ffffff;
-            transform: scale(1.15);
-        }
-
         .btn-primary {
             width: 100%;
             padding: 14px;
@@ -408,7 +386,8 @@
             flex-direction: column;
             justify-content: center;
             align-items: center;
-            gap: 20px;
+            gap: 15px;
+            padding-bottom: 70px;
         }
 
         .timer-circle {
@@ -418,26 +397,26 @@
             margin-bottom: 5px;
         }
 
+        /* Cases de réponses plus grosses et aux couleurs distinctes */
         .choices-grid {
             display: grid;
             grid-template-columns: 1fr;
-            gap: 12px;
+            gap: 14px;
             width: 100%;
             max-width: 400px;
         }
 
         .choice-btn {
-            background: rgba(25, 30, 45, 0.9);
-            border: 2px solid rgba(255, 255, 255, 0.15);
+            border: 2px solid rgba(255, 255, 255, 0.2);
             color: white;
-            padding: 16px;
-            border-radius: 14px;
-            font-size: 1rem;
-            font-weight: 600;
+            padding: 22px 18px;
+            border-radius: 16px;
+            font-size: 1.15rem;
+            font-weight: 700;
             cursor: pointer;
             transition: all 0.15s ease;
             text-align: center;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.4);
         }
 
         .choice-btn:active:not(:disabled) {
@@ -445,13 +424,15 @@
         }
 
         .choice-btn.selected {
-            background: #7928ca;
-            border-color: #ff007f;
-            box-shadow: 0 0 20px rgba(121, 40, 202, 0.6);
+            background: #ffffff !important;
+            color: #0b0f19 !important;
+            border-color: #ffffff !important;
+            box-shadow: 0 0 25px rgba(255, 255, 255, 0.8);
         }
 
         .choice-btn:disabled {
             cursor: not-allowed;
+            opacity: 0.7;
         }
 
         .waiting-message {
@@ -460,6 +441,30 @@
             text-align: center;
             font-weight: 500;
             padding: 20px;
+        }
+
+        /* Gros bouton Maître du jeu en bas de l'écran */
+        .master-action-footer {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            right: 20px;
+            display: none;
+            z-index: 50;
+        }
+
+        .master-big-btn {
+            width: 100%;
+            padding: 16px;
+            border-radius: 14px;
+            background: #22c55e;
+            color: white;
+            border: none;
+            font-size: 1.15rem;
+            font-weight: 800;
+            cursor: pointer;
+            box-shadow: 0 10px 25px rgba(34, 197, 94, 0.5);
+            text-align: center;
         }
     </style>
 </head>
@@ -483,7 +488,6 @@
                     <!-- Section Admin (cachée par défaut) -->
                     <div id="admin-controls-section">
                         <label style="font-size: 0.8rem; color: #ff007f; font-weight: bold;">CONTRÔLE MAÎTRE DU JEU</label>
-                        <button class="menu-action-btn" style="background: #22c55e; border-color: #22c55e; text-align: center; font-weight: bold;" onclick="playClickSound(); triggerNextRoundMaster()">Morceau suivant</button>
                         
                         <div class="menu-divider"></div>
                         <label>Rechercher une playlist :</label>
@@ -509,9 +513,7 @@
         <div class="modal-card">
             <div class="modal-title" id="modal-title">Information</div>
             <div class="modal-message" id="modal-message">Message</div>
-            <div class="modal-buttons" id="modal-buttons">
-                <!-- Boutons injectés dynamiquement -->
-            </div>
+            <div class="modal-buttons" id="modal-buttons"></div>
         </div>
     </div>
 
@@ -529,11 +531,6 @@
                     <div class="cartoon-avatar-display" id="preview-avatar"></div>
                     <span style="font-size: 0.85rem; color: #a0aec0;">Change ton pseudo pour modifier ton personnage !</span>
                 </div>
-            </div>
-
-            <div class="input-group">
-                <label>Choisis ta Couleur</label>
-                <div class="color-selection" id="color-container"></div>
             </div>
 
             <button class="btn-primary" onclick="playClickSound(); joinGame()">Rejoindre la partie</button>
@@ -555,6 +552,11 @@
             </div>
         </div>
     </main>
+
+    <!-- Bouton de contrôle fixe en bas pour le Maître du jeu -->
+    <div class="master-action-footer" id="master-footer">
+        <button class="master-big-btn" id="master-main-btn" onclick="playClickSound(); handleMasterAction()">Démarrer la partie</button>
+    </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
@@ -617,19 +619,15 @@
             dropdown.classList.toggle('open');
         };
 
-        // Anti-mise en veille (Wake Lock API) pour empêcher le téléphone de se verrouiller
+        // Anti-mise en veille (Wake Lock API)
         let wakeLock = null;
         async function requestWakeLock() {
             if ('wakeLock' in navigator) {
                 try {
                     wakeLock = await navigator.wakeLock.request('screen');
-                } catch (err) {
-                    // Ignore si refusé ou non supporté
-                }
+                } catch (err) {}
             }
         }
-
-        // Réactive le verrouillage si l'utilisateur revient sur l'onglet
         document.addEventListener('visibilitychange', async () => {
             if (wakeLock !== null && document.visibilityState === 'visible') {
                 await requestWakeLock();
@@ -648,26 +646,13 @@
             document.getElementById('preview-avatar').style.backgroundImage = `url('${url}')`;
         };
 
-        const colors = ["#ff007f", "#7928ca", "#22c55e", "#3b82f6", "#eab308", "#ef4444"];
-        let selectedColor = colors[0];
+        // Palette de couleurs aléatoires pour les joueurs
+        const playerColors = ["#ff007f", "#7928ca", "#22c55e", "#3b82f6", "#eab308", "#ef4444", "#06b6d4", "#ec4899", "#8b5cf6"];
+        let assignedColor = playerColors[Math.floor(Math.random() * playerColors.length)];
+
         let playerId = localStorage.getItem('blindtest_player_id') || 'player_' + Math.random().toString(36.2).substring(2, 9);
         localStorage.setItem('blindtest_player_id', playerId);
 
-        const colorContainer = document.getElementById('color-container');
-        colors.forEach((col, idx) => {
-            const div = document.createElement('div');
-            div.className = `color-option ${idx === 0 ? 'selected' : ''}`;
-            div.style.backgroundColor = col;
-            div.onclick = () => {
-                playClickSound();
-                document.querySelectorAll('.color-option').forEach(el => el.classList.remove('selected'));
-                div.classList.add('selected');
-                selectedColor = col;
-            };
-            colorContainer.appendChild(div);
-        });
-
-        // Initialisation aperçu avatar cartoon
         window.updateCartoonAvatar();
 
         window.joinGame = function() {
@@ -678,15 +663,13 @@
             }
 
             const avatarUrl = getCartoonAvatarUrl(nameInput);
-
-            // Active l'anti-mise en veille de l'écran du téléphone
             requestWakeLock();
 
             const playerRef = ref(db, 'players/' + playerId);
             set(playerRef, {
                 name: nameInput,
                 avatar: avatarUrl,
-                color: selectedColor,
+                color: assignedColor,
                 score: 0,
                 answered: false,
                 lastChoice: null,
@@ -699,16 +682,15 @@
                 document.getElementById('display-name').textContent = nameInput;
                 document.getElementById('display-avatar').style.backgroundImage = `url('${avatarUrl}')`;
                 
-                // Appliquer les couleurs sur la pastille personnelle du joueur
                 const pill = document.getElementById('my-player-pill');
                 let glowColor = 'rgba(121, 40, 202, 0.6)';
-                if (selectedColor.startsWith('#') && selectedColor.length === 7) {
-                    let r = parseInt(selectedColor.slice(1, 3), 16);
-                    let g = parseInt(selectedColor.slice(3, 5), 16);
-                    let b = parseInt(selectedColor.slice(5, 7), 16);
+                if (assignedColor.startsWith('#') && assignedColor.length === 7) {
+                    let r = parseInt(assignedColor.slice(1, 3), 16);
+                    let g = parseInt(assignedColor.slice(3, 5), 16);
+                    let b = parseInt(assignedColor.slice(5, 7), 16);
                     glowColor = `rgba(${r}, ${g}, ${b}, 0.6)`;
                 }
-                pill.style.setProperty('--player-color', selectedColor);
+                pill.style.setProperty('--player-color', assignedColor);
                 pill.style.setProperty('--player-glow', glowColor);
 
                 listenToGameState();
@@ -727,6 +709,9 @@
         }
 
         // --- GESTION DU MODE MAÎTRE DU JEU (ADMIN) ---
+        let isAdminMaster = false;
+        let gameHasStartedMaster = false;
+
         window.promptAdminPassword = function() {
             const overlay = document.getElementById('custom-modal');
             document.getElementById('modal-title').textContent = "Accès Maître du jeu";
@@ -749,7 +734,9 @@
                 const pwd = document.getElementById('admin-pwd-input').value;
                 if (pwd === "admin") {
                     overlay.classList.remove('open');
+                    isAdminMaster = true;
                     document.getElementById('admin-controls-section').style.display = 'flex';
+                    document.getElementById('master-footer').style.display = 'block';
                     window.showAlertModal("Succès", "Mode Maître du jeu activé !");
                 } else {
                     overlay.classList.remove('open');
@@ -761,9 +748,17 @@
             overlay.classList.add('open');
         };
 
-        window.triggerNextRoundMaster = function() {
-            set(ref(db, 'gameState/remoteAction'), { type: 'next', timestamp: Date.now() });
-            toggleBurgerMenu();
+        window.handleMasterAction = function() {
+            if (!gameHasStartedMaster) {
+                // Premier clic : Démarre la partie
+                gameHasStartedMaster = true;
+                document.getElementById('master-main-btn').textContent = "Morceau suivant";
+                document.getElementById('master-main-btn').style.background = "#7928ca";
+                set(ref(db, 'gameState/remoteAction'), { type: 'next', timestamp: Date.now() });
+            } else {
+                // Clics suivants : Morceau suivant
+                set(ref(db, 'gameState/remoteAction'), { type: 'next', timestamp: Date.now() });
+            }
         };
 
         window.masterResetScores = function() {
@@ -780,6 +775,9 @@
         };
 
         window.masterStopGame = function() {
+            gameHasStartedMaster = false;
+            document.getElementById('master-main-btn').textContent = "Démarrer la partie";
+            document.getElementById('master-main-btn').style.background = "#22c55e";
             set(ref(db, 'gameState/remoteAction'), { type: 'stop', timestamp: Date.now() });
             window.showAlertModal("Partie", "La partie a été arrêtée.");
             toggleBurgerMenu();
@@ -847,15 +845,19 @@
                 const board = document.getElementById('game-board-content');
                 
                 if (!state || state.status !== 'playing') {
-                    board.innerHTML = `<div class="waiting-message">En attente du prochain morceau...</div>`;
+                    board.innerHTML = `<div class="waiting-message">En attente du lancement du morceau...</div>`;
                     return;
                 }
+
+                // Palette de couleurs distinctes pour les 4 gros boutons de réponses
+                const choiceColors = ["#7928ca", "#3b82f6", "#22c55e", "#eab308"];
 
                 let html = `<div class="timer-circle" id="live-timer">${state.timeLeft || 15}</div>`;
                 html += `<div class="choices-grid">`;
                 
                 state.choices.forEach((choice, index) => {
-                    html += `<button class="choice-btn" id="choice-${index}" onclick="playClickSound(); makeChoice(${index})">${choice}</button>`;
+                    const btnColor = choiceColors[index % choiceColors.length];
+                    html += `<button class="choice-btn" id="choice-${index}" style="background-color: ${btnColor};" onclick="playClickSound(); makeChoice(${index})">${choice}</button>`;
                 });
                 
                 html += `</div>`;
