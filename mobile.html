@@ -200,7 +200,14 @@
         .player-profile-left {
             display: flex;
             align-items: center;
-            gap: 12px;
+            gap: 10px;
+        }
+
+        .player-rank {
+            font-weight: 800;
+            font-size: 1.1rem;
+            width: 32px;
+            color: #ffffff;
         }
 
         .player-avatar-badge {
@@ -217,6 +224,30 @@
             font-weight: 700;
             font-size: 1.05rem;
             color: white;
+        }
+
+        .points-badge {
+            background: rgba(0, 0, 0, 0.85);
+            padding: 3px 8px;
+            border-radius: 12px;
+            font-weight: 900;
+            font-size: 0.95rem;
+            border: 2px solid var(--player-color, #22c55e);
+            color: var(--player-color, #22c55e);
+            box-shadow: 0 0 12px var(--player-color, #22c55e);
+            margin-right: 10px;
+            opacity: 1;
+            transition: opacity 0.5s ease;
+        }
+
+        .points-badge.penalty {
+            border-color: #ef4444;
+            color: #ef4444;
+            box-shadow: 0 0 12px rgba(239, 68, 68, 0.8);
+        }
+
+        .points-badge.fade-out {
+            opacity: 0;
         }
 
         .player-score-badge {
@@ -327,10 +358,14 @@
             <!-- Pastille de score -->
             <div class="player-pill-container" id="my-player-pill">
                 <div class="player-profile-left">
+                    <div class="player-rank" id="display-rank">#1</div>
                     <div class="player-avatar-badge" id="display-avatar"></div>
                     <div class="player-name-text" id="display-name">Nom</div>
                 </div>
-                <div class="player-score-badge" id="display-score">0 pts</div>
+                <div style="display: flex; align-items: center;">
+                    <div class="points-badge" id="display-points-badge" style="display: none;"></div>
+                    <div class="player-score-badge" id="display-score">0 pts</div>
+                </div>
             </div>
 
             <div class="game-board" id="game-board-content">
@@ -443,8 +478,6 @@
                 const snapshot = await get(ref(db, 'players'));
                 const playersObj = snapshot.val() || {};
                 const playerKeys = Object.keys(playersObj);
-                // Si ce joueur n'est pas encore enregistré, son index sera playerKeys.length
-                // S'il est déjà enregistré, on garde sa couleur actuelle ou on l'assigne
                 if (!playersObj[playerId]) {
                     assignedColor = distinctColors[playerKeys.length % distinctColors.length];
                 } else {
@@ -482,15 +515,49 @@
                 pill.style.setProperty('--player-glow', glowColor);
 
                 listenToGameState();
-                listenToPersonalScore();
+                listenToPlayersData();
             });
         };
 
-        function listenToPersonalScore() {
-            onValue(ref(db, 'players/' + playerId), (snapshot) => {
+        // Écoute l'ensemble des joueurs pour calculer le rang, le score et les points gagnés/perdus en temps réel
+        function listenToPlayersData() {
+            onValue(ref(db, 'players'), (snapshot) => {
                 const data = snapshot.val();
-                if (data) {
-                    document.getElementById('display-score').textContent = `${data.score || 0} pts`;
+                if (!data) return;
+
+                let playersArray = Object.keys(data).map(key => ({
+                    id: key,
+                    ...data[key]
+                }));
+
+                // Tri des joueurs par score décroissant pour déterminer le classement
+                playersArray.sort((a, b) => (b.score || 0) - (a.score || 0));
+
+                const myIndex = playersArray.findIndex(p => p.id === playerId);
+                if (myIndex !== -1) {
+                    const me = playersArray[myIndex];
+
+                    // Mise à jour du rang
+                    document.getElementById('display-rank').textContent = `#${myIndex + 1}`;
+
+                    // Mise à jour du score
+                    document.getElementById('display-score').textContent = `${me.score || 0} pts`;
+
+                    // Mise à jour de la bulle de points (gagnés ou pénalité)
+                    const pointsBadge = document.getElementById('display-points-badge');
+                    if (me.lastEarnedPoints !== undefined && me.lastEarnedPoints !== null && me.lastEarnedPoints !== 0) {
+                        if (me.lastEarnedPoints > 0) {
+                            pointsBadge.className = 'points-badge';
+                            pointsBadge.textContent = `+${me.lastEarnedPoints}`;
+                        } else {
+                            pointsBadge.className = 'points-badge penalty';
+                            pointsBadge.textContent = me.lastEarnedPoints;
+                        }
+                        pointsBadge.style.display = 'block';
+                        pointsBadge.classList.remove('fade-out');
+                    } else {
+                        pointsBadge.style.display = 'none';
+                    }
                 }
             });
         }
