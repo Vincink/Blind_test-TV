@@ -1064,9 +1064,13 @@
             </div>
             
             <div class="editor-container-flex">
-                <!-- Colonne de gauche : Morceaux enregistrés -->
+                <!-- Colonne de gauche : Morceaux enregistrés avec barre de recherche/filtre -->
                 <div class="editor-column">
                     <label>Morceaux de la playlist :</label>
+                    <div class="search-input-wrapper" style="margin-bottom: 4px;">
+                        <input type="text" id="filter-playlist-input" class="modal-input" placeholder="Filtrer les morceaux de la playlist..." oninput="filterPlaylistTracks()">
+                        <button class="clear-search-btn" id="clear-filter-btn" onclick="clearPlaylistFilter()" title="Effacer"><i class="fa-solid fa-xmark"></i></button>
+                    </div>
                     <div class="editor-tracks-container" id="editor-tracks-list"></div>
                 </div>
 
@@ -1738,10 +1742,12 @@
 
             document.getElementById('editor-playlist-title').textContent = `Éditer : ${pl.name}`;
             document.getElementById('editor-search-input').value = '';
+            document.getElementById('filter-playlist-input').value = '';
+            document.getElementById('clear-filter-btn').style.display = 'none';
             toggleClearSearchBtn();
             document.getElementById('editor-search-results').innerHTML = '';
             editorSearchResultsCache = [];
-            renderEditorTracks(pl);
+            renderEditorTracks(pl, '');
 
             document.getElementById('custom-playlist-editor-modal').classList.add('open');
         };
@@ -1772,7 +1778,37 @@
             input.focus();
         };
 
-        function renderEditorTracks(pl) {
+        window.filterPlaylistTracks = function() {
+            const input = document.getElementById('filter-playlist-input');
+            const clearBtn = document.getElementById('clear-filter-btn');
+            if (input.value.trim().length > 0) {
+                clearBtn.style.display = 'block';
+            } else {
+                clearBtn.style.display = 'none';
+            }
+
+            if (!activeEditingPlaylistId) return;
+            const playlists = getCustomPlaylists();
+            const pl = playlists.find(p => p.id === activeEditingPlaylistId);
+            if (pl) {
+                renderEditorTracks(pl, input.value);
+            }
+        };
+
+        window.clearPlaylistFilter = function() {
+            const input = document.getElementById('filter-playlist-input');
+            input.value = '';
+            document.getElementById('clear-filter-btn').style.display = 'none';
+            if (!activeEditingPlaylistId) return;
+            const playlists = getCustomPlaylists();
+            const pl = playlists.find(p => p.id === activeEditingPlaylistId);
+            if (pl) {
+                renderEditorTracks(pl, '');
+            }
+            input.focus();
+        };
+
+        function renderEditorTracks(pl, filter = '') {
             const container = document.getElementById('editor-tracks-list');
             container.innerHTML = '';
 
@@ -1781,7 +1817,19 @@
                 return;
             }
 
-            pl.tracks.forEach((track, index) => {
+            const query = filter.toLowerCase().trim();
+            const filteredTracks = query ? pl.tracks.map((t, idx) => ({t, idx})).filter(({t}) => 
+                t.trackName.toLowerCase().includes(query) || 
+                t.artistName.toLowerCase().includes(query) || 
+                (t.collectionName && t.collectionName.toLowerCase().includes(query))
+            ) : pl.tracks.map((t, idx) => ({t, idx}));
+
+            if (filteredTracks.length === 0) {
+                container.innerHTML = '<div style="color: #a0aec0; text-align: center; font-size: 0.9rem; padding: 30px;">Aucun morceau trouvé pour ce filtre.</div>';
+                return;
+            }
+
+            filteredTracks.forEach(({t: track, idx: index}) => {
                 const row = document.createElement('div');
                 row.className = 'editor-track-row';
                 row.innerHTML = `
@@ -1804,7 +1852,8 @@
             if (pl) {
                 pl.tracks.splice(trackIndex, 1);
                 saveCustomPlaylists(playlists);
-                renderEditorTracks(pl);
+                const filterVal = document.getElementById('filter-playlist-input').value;
+                renderEditorTracks(pl, filterVal);
             }
         };
 
@@ -1921,7 +1970,8 @@
                 if (!pl.tracks.some(item => item.audioUrl === audioUrl)) {
                     pl.tracks.push({ trackName, artistName, collectionName, collectionId, audioUrl, artworkUrl });
                     saveCustomPlaylists(playlists);
-                    renderEditorTracks(pl);
+                    const filterVal = document.getElementById('filter-playlist-input').value;
+                    renderEditorTracks(pl, filterVal);
                 } else {
                     window.showAlertModal("Information", "Ce morceau est déjà dans cette playlist.");
                 }
