@@ -1123,7 +1123,6 @@
                 </div>
             </div>
 
-            <audio id="audio-player" preload="auto"></audio>
             <audio id="preview-audio-player" preload="none"></audio>
         </div>
 
@@ -1299,8 +1298,6 @@
 
         window.confirmStopGame = function() {
             window.showModal("Arrêter la partie", "Voulez-vous vraiment arrêter la partie en cours ?", "danger", () => {
-                const audioElem = document.getElementById('audio-player');
-                if (audioElem) audioElem.pause();
                 const previewElem = document.getElementById('preview-audio-player');
                 if (previewElem) previewElem.pause();
                 document.getElementById('vinyl-disc').classList.remove('playing');
@@ -1337,6 +1334,7 @@
                             });
                         }
                     });
+                    window.dbSet(window.dbRef(window.dbInstance, 'gameState'), { status: 'stopped' });
                 }
             });
         };
@@ -2110,23 +2108,6 @@
             playedIndices.push(randomIndex);
             const track = dynamicPlaylist[randomIndex];
 
-            const audioElem = document.getElementById('audio-player');
-            audioElem.src = track.audioUrl;
-            audioElem.volume = 0; 
-            audioElem.play().catch(() => {});
-
-            let fadeVol = 0;
-            const fadeInInterval = setInterval(() => {
-                fadeVol += 0.15;
-                if (fadeVol >= 1) {
-                    fadeVol = 1;
-                    audioElem.volume = 1;
-                    clearInterval(fadeInInterval);
-                } else {
-                    audioElem.volume = fadeVol;
-                }
-            }, 80);
-
             document.getElementById('qr-container').classList.add('minimized');
             document.getElementById('reveal-container-box').classList.remove('visible');
             document.getElementById('reveal-label').textContent = "";
@@ -2151,12 +2132,15 @@
                         }
                     });
 
+                    // On transmet toutes les infos + l'URL audio à la télé pour qu'elle joue la musique
                     window.dbSet(window.dbRef(window.dbInstance, 'gameState'), {
                         status: 'playing',
                         choices: track.choices,
                         trackIndex: randomIndex,
                         trackName: track.trackName,
-                        artistName: track.artistName
+                        artistName: track.artistName,
+                        audioUrl: track.audioUrl,
+                        roundId: Date.now()
                     });
                 }
             }, 300);
@@ -2176,12 +2160,6 @@
                 const elapsed = Date.now() - startTime;
                 const remainingMs = duration - elapsed;
                 const remaining = Math.max(0, Math.ceil(remainingMs / 1000));
-                
-                if (remainingMs <= 1500 && remainingMs > 0) {
-                    audioElem.volume = 0.4 + (remainingMs / 1500) * 0.6;
-                } else if (remainingMs <= 0) {
-                    audioElem.volume = 0.4;
-                }
 
                 if (remaining !== musicTimeLeft) {
                     musicTimeLeft = remaining;
