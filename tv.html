@@ -1,0 +1,503 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <link rel="icon" type="image/jpeg" href="icon.jpeg">
+    <link rel="apple-touch-icon" href="icon.jpeg">
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Blind Test - Mode Télé</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+
+        body {
+            background-color: #0b0f19;
+            color: #ffffff;
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Bouton de secours pour quitter la page télé */
+        #exit-tv-btn {
+            position: fixed;
+            top: 15px;
+            left: 15px;
+            background: rgba(0,0,0,0.6);
+            border: 1px solid rgba(255,255,255,0.2);
+            color: white;
+            padding: 8px 14px;
+            border-radius: 8px;
+            cursor: pointer;
+            z-index: 9999;
+            font-size: 0.85rem;
+        }
+
+        main {
+            flex: 1;
+            display: grid;
+            grid-template-columns: 1.2fr 1fr;
+            padding: 40px 60px;
+            gap: 50px;
+            align-items: center;
+            height: 100vh;
+        }
+
+        .center-zone {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            transform: scale(1.3);
+        }
+
+        .reveal-container {
+            display: none;
+            position: absolute;
+            top: -20px;
+            left: 50%;
+            transform: translateX(-50%);
+            text-align: center;
+            padding: 22px 30px;
+            border-radius: 18px;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            box-shadow: 0 15px 40px rgba(0,0,0,0.5);
+            backdrop-filter: blur(12px);
+            z-index: 10;
+            width: 90%;
+            max-width: 400px;
+        }
+
+        .reveal-container.visible {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            animation: revealPop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }
+
+        .reveal-label {
+            font-size: 1.2rem;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            color: #ff007f;
+            font-weight: 800;
+            margin-bottom: 6px;
+            text-shadow: 0 0 15px rgba(255, 0, 127, 0.6);
+        }
+
+        .track-info-preview {
+            font-size: 1.6rem;
+            color: #ffffff;
+            font-weight: 800;
+            text-align: center;
+            text-shadow: 0 2px 20px rgba(121, 40, 202, 0.7);
+        }
+
+        @keyframes revealPop {
+            0% { opacity: 0; transform: translateX(-50%) scale(0.85); }
+            100% { opacity: 1; transform: translateX(-50%) scale(1); }
+        }
+
+        .vinyl-container {
+            position: relative;
+            width: 240px;
+            height: 240px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+
+        .vinyl {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            background: radial-gradient(circle, #111 0%, #111 30%, #222 31%, #000 100%);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.6);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            animation: spin 8s linear infinite paused;
+        }
+
+        .vinyl.playing {
+            animation-play-state: running;
+        }
+
+        .vinyl-label {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: linear-gradient(45deg, #ff007f, #7928ca);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 0.75rem;
+            border: 3px solid #fff;
+            text-align: center;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .game-status-display {
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+        }
+
+        .status-title {
+            font-size: 1.3rem;
+            color: #a0aec0;
+            margin-bottom: 5px;
+        }
+
+        .counter-wrapper {
+            height: 100px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 5px 0;
+        }
+
+        .big-counter {
+            font-size: 4.5rem;
+            font-weight: 800;
+            color: #ff007f;
+            text-shadow: 0 0 20px rgba(255, 0, 127, 0.4);
+            line-height: 1;
+        }
+
+        .right-zone {
+            background: rgba(25, 30, 45, 0.75);
+            border: 2px solid rgba(121, 40, 202, 0.6);
+            border-radius: 20px;
+            padding: 30px;
+            display: flex;
+            flex-direction: column;
+            height: 85vh;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .right-header-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+            flex-shrink: 0;
+        }
+
+        .right-header-bar h2 {
+            font-size: 1.5rem;
+        }
+
+        .players-count {
+            background: #7928ca;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 1rem;
+            font-weight: bold;
+        }
+
+        .players-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            overflow: hidden;
+        }
+
+        .top-three-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            flex-shrink: 0;
+        }
+
+        .scrollable-players-wrapper {
+            flex: 1;
+            overflow: hidden;
+            position: relative;
+            border-top: 1px dashed rgba(255, 255, 255, 0.2);
+            padding-top: 15px;
+        }
+
+        .scrollable-players-inner {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            position: absolute;
+            width: 100%;
+            animation: smoothMarquee 12s ease-in-out infinite alternate;
+        }
+
+        @keyframes smoothMarquee {
+            0% { transform: translateY(0); }
+            100% { transform: translateY(calc(-100% + 200px)); }
+        }
+
+        .player-row-wrapper {
+            position: relative;
+            overflow: hidden;
+            border-radius: 14px;
+            flex-shrink: 0;
+        }
+
+        .player-pill {
+            position: relative;
+            display: flex;
+            align-items: center;
+            padding: 14px 18px;
+            border-radius: 14px;
+            background: rgba(25, 30, 45, 0.9);
+            border: 3px solid var(--player-color);
+            box-shadow: 0 0 18px 3px var(--player-glow);
+            z-index: 2;
+        }
+
+        .player-rank {
+            font-weight: 800;
+            font-size: 1.3rem;
+            width: 40px;
+            color: #ffffff;
+        }
+
+        .player-avatar {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            background-size: cover;
+            background-position: center;
+            margin-right: 18px;
+            border: 2px solid white;
+        }
+
+        .player-info {
+            flex: 1;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .player-name {
+            font-weight: 600;
+            font-size: 1.2rem;
+            color: #ffffff;
+        }
+
+        .points-badge {
+            background: rgba(0, 0, 0, 0.85);
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-weight: 900;
+            font-size: 1.1rem;
+            border: 2px solid var(--player-color);
+            color: var(--player-color);
+            box-shadow: 0 0 12px var(--player-color);
+            margin-right: 15px;
+            opacity: 1;
+            transition: opacity 0.5s ease;
+        }
+
+        .points-badge.penalty {
+            border-color: #ef4444;
+            color: #ef4444;
+            box-shadow: 0 0 12px rgba(239, 68, 68, 0.8);
+        }
+
+        .points-badge.fade-out {
+            opacity: 0;
+        }
+
+        .player-score {
+            font-weight: 800;
+            font-size: 1.3rem;
+        }
+    </style>
+</head>
+<body>
+
+    <button id="exit-tv-btn" onclick="window.location.href='index.html'">← Retour Admin</button>
+
+    <main>
+        <div class="center-zone">
+            <div class="reveal-container" id="reveal-container-box">
+                <div class="reveal-label" id="reveal-label">C'était :</div>
+                <div class="track-info-preview" id="track-info-preview"></div>
+            </div>
+
+            <div class="vinyl-container">
+                <div class="vinyl" id="vinyl-disc">
+                    <div class="vinyl-label" id="vinyl-label-text">BLIND TEST</div>
+                </div>
+            </div>
+            
+            <div class="game-status-display">
+                <div class="status-title" id="status-label">En attente du lancement...</div>
+                <div class="counter-wrapper">
+                    <div class="big-counter" id="big-counter">--</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="right-zone">
+            <div class="right-header-bar">
+                <h2>Classement en direct</h2>
+                <span class="players-count" id="player-count">0</span>
+            </div>
+            
+            <div class="players-container">
+                <div class="top-three-list" id="top-three-container"></div>
+                <div class="scrollable-players-wrapper" id="scroll-wrapper" style="display: none;">
+                    <div class="scrollable-players-inner" id="scrollable-container"></div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyC009nu3gKCkZczF_7w5Iqf9aUMd-TRsBM",
+            authDomain: "blindtest-tv.firebaseapp.com",
+            databaseURL: "https://blindtest-tv-default-rtdb.europe-west1.firebasedatabase.app",
+            projectId: "blindtest-tv",
+            storageBucket: "blindtest-tv.firebasestorage.app",
+            messagingSenderId: "879373587888",
+            appId: "1:879373587888:web:df8c99cb8aed5b7acb7275",
+            measurementId: "G-J090BQQYZB"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+
+        // Synchronisation de l'état du jeu (Timer, vinyle, révélation)
+        const gameStateRef = ref(db, 'gameState');
+        onValue(gameStateRef, (snapshot) => {
+            const state = snapshot.val();
+            const vinyl = document.getElementById('vinyl-disc');
+            const counter = document.getElementById('big-counter');
+            const statusLabel = document.getElementById('status-label');
+            const revealBox = document.getElementById('reveal-container-box');
+            const trackPreview = document.getElementById('track-info-preview');
+
+            if (!state) return;
+
+            if (state.status === 'playing') {
+                vinyl.classList.add('playing');
+                revealBox.classList.remove('visible');
+                statusLabel.textContent = "Extrait en cours...";
+                counter.textContent = state.timeLeft !== undefined ? state.timeLeft : 15;
+            } else if (state.status === 'reveal') {
+                vinyl.classList.remove('playing');
+                statusLabel.textContent = "";
+                counter.textContent = "";
+                trackPreview.textContent = `${state.artistName} - ${state.trackName}`;
+                revealBox.classList.add('visible');
+            }
+        });
+
+        // Synchronisation en temps réel des joueurs et du classement
+        const playersRef = ref(db, 'players');
+        onValue(playersRef, (snapshot) => {
+            const data = snapshot.val();
+            const topContainer = document.getElementById('top-three-container');
+            const scrollWrapper = document.getElementById('scroll-wrapper');
+            const scrollableContainer = document.getElementById('scrollable-container');
+            
+            topContainer.innerHTML = '';
+            scrollableContainer.innerHTML = '';
+
+            if (!data) {
+                document.getElementById('player-count').textContent = '0';
+                topContainer.innerHTML = '<div style="color: #a0aec0; text-align: center; margin-top: 30px; font-size: 1.2rem;">En attente de joueurs...</div>';
+                scrollWrapper.style.display = 'none';
+                return;
+            }
+
+            let playersArray = Object.keys(data).map(key => ({
+                id: key,
+                ...data[key]
+            }));
+
+            playersArray.sort((a, b) => (b.score || 0) - (a.score || 0));
+            document.getElementById('player-count').textContent = playersArray.length;
+
+            const topThree = playersArray.slice(0, 3);
+            const restOfPlayers = playersArray.slice(3);
+
+            const createPlayerHTML = (player, index) => {
+                const pColor = player.color || '#7928ca';
+                let glowColor = 'rgba(121, 40, 202, 0.85)';
+                if (pColor.startsWith('#') && pColor.length === 7) {
+                    let r = parseInt(pColor.slice(1, 3), 16);
+                    let g = parseInt(pColor.slice(3, 5), 16);
+                    let b = parseInt(pColor.slice(5, 7), 16);
+                    glowColor = `rgba(${r}, ${g}, ${b}, 0.85)`;
+                }
+
+                let pointsBadgeHTML = '';
+                if (player.lastEarnedPoints !== undefined && player.lastEarnedPoints !== null && player.lastEarnedPoints !== 0) {
+                    if (player.lastEarnedPoints > 0) {
+                        pointsBadgeHTML = `<div class="points-badge">+${player.lastEarnedPoints}</div>`;
+                    } else {
+                        pointsBadgeHTML = `<div class="points-badge penalty">${player.lastEarnedPoints}</div>`;
+                    }
+                }
+
+                const wrapper = document.createElement('div');
+                wrapper.className = 'player-row-wrapper';
+                wrapper.innerHTML = `
+                    <div class="player-pill" style="--player-color: ${pColor}; --player-glow: ${glowColor};">
+                        <div class="player-rank">#${index + 1}</div>
+                        <div class="player-avatar" style="background-image: url('${player.avatar || "https://i.pravatar.cc/150?img=1"}')"></div>
+                        <div class="player-info">
+                            <span class="player-name">${player.name}</span>
+                            <div style="display: flex; align-items: center;">
+                                ${pointsBadgeHTML}
+                                <span class="player-score" style="color: ${pColor}">${player.score || 0} pts</span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                return wrapper;
+            };
+
+            topThree.forEach((player, index) => {
+                topContainer.appendChild(createPlayerHTML(player, index));
+            });
+
+            if (restOfPlayers.length > 0) {
+                scrollWrapper.style.display = 'block';
+                restOfPlayers.forEach((player, index) => {
+                    scrollableContainer.appendChild(createPlayerHTML(player, index + 3));
+                });
+            } else {
+                scrollWrapper.style.display = 'none';
+            }
+        });
+    </script>
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</body>
+</html>
