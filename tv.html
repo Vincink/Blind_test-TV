@@ -24,7 +24,6 @@
             flex-direction: column;
         }
 
-        /* Bouton de secours pour quitter la page télé */
         #exit-tv-btn {
             position: fixed;
             top: 15px;
@@ -373,6 +372,9 @@
         </div>
     </main>
 
+    <!-- Lecteur Audio HTML5 hébergé directement sur la Télévision -->
+    <audio id="tv-audio-player" preload="auto"></audio>
+
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
@@ -391,7 +393,11 @@
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
 
-        // Synchronisation de l'état du jeu (Timer, vinyle, révélation)
+        const audioElem = document.getElementById('tv-audio-player');
+        let currentRoundId = null;
+        let tvFadeInterval = null;
+
+        // Synchronisation de l'état du jeu (Musique, Timer, vinyle, révélation)
         const gameStateRef = ref(db, 'gameState');
         onValue(gameStateRef, (snapshot) => {
             const state = snapshot.val();
@@ -408,12 +414,47 @@
                 revealBox.classList.remove('visible');
                 statusLabel.textContent = "Extrait en cours...";
                 counter.textContent = state.timeLeft !== undefined ? state.timeLeft : 15;
+
+                // Si un nouveau tour commence, on lance la musique sur la télé avec fade-in
+                if (state.roundId && state.roundId !== currentRoundId && state.audioUrl) {
+                    currentRoundId = state.roundId;
+                    if (tvFadeInterval) clearInterval(tvFadeInterval);
+
+                    audioElem.src = state.audioUrl;
+                    audioElem.volume = 0;
+                    audioElem.play().catch(() => {});
+
+                    let fadeVol = 0;
+                    tvFadeInterval = setInterval(() => {
+                        fadeVol += 0.15;
+                        if (fadeVol >= 1) {
+                            fadeVol = 1;
+                            audioElem.volume = 1;
+                            clearInterval(tvFadeInterval);
+                        } else {
+                            audioElem.volume = fadeVol;
+                        }
+                    }, 80);
+                }
+
+                // Gestion du fade-out vers 40% sur les 1.5 dernières secondes (basé sur le timeLeft de l'admin)
+                if (state.timeLeft <= 1.5 && audioElem.volume > 0.4) {
+                    audioElem.volume = 0.4;
+                }
+
             } else if (state.status === 'reveal') {
                 vinyl.classList.remove('playing');
                 statusLabel.textContent = "";
                 counter.textContent = "";
                 trackPreview.textContent = `${state.artistName} - ${state.trackName}`;
                 revealBox.classList.add('visible');
+            } else if (state.status === 'stopped') {
+                vinyl.classList.remove('playing');
+                audioElem.pause();
+                statusLabel.textContent = "En attente du lancement...";
+                counter.textContent = "--";
+                revealBox.classList.remove('visible');
+                currentRoundId = null;
             }
         });
 
