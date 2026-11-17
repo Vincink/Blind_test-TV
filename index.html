@@ -991,6 +991,17 @@
                     <span></span>
                 </div>
                 <div class="burger-menu" id="burger-dropdown">
+                    <!-- Choix de la sortie audio -->
+                    <div class="menu-item">
+                        <label>Sortie audio :</label>
+                        <div class="score-target-grid">
+                            <button class="target-btn active" id="btn-audio-tv" onclick="playClickSound(); setAudioMode('tv')">🖥️ Sur la Télé</button>
+                            <button class="target-btn" id="btn-audio-ipad" onclick="playClickSound(); setAudioMode('ipad')">📱 Sur l'iPad</button>
+                        </div>
+                    </div>
+
+                    <div class="menu-divider"></div>
+
                     <!-- Objectif de points -->
                     <div class="menu-item">
                         <label>Objectif de points :</label>
@@ -1123,6 +1134,8 @@
                 </div>
             </div>
 
+            <!-- Lecteur audio de secours pour jouer directement sur l'iPad si la télé est éteinte -->
+            <audio id="audio-player" preload="auto"></audio>
             <audio id="preview-audio-player" preload="none"></audio>
         </div>
 
@@ -1298,6 +1311,8 @@
 
         window.confirmStopGame = function() {
             window.showModal("Arrêter la partie", "Voulez-vous vraiment arrêter la partie en cours ?", "danger", () => {
+                const audioElem = document.getElementById('audio-player');
+                if (audioElem) audioElem.pause();
                 const previewElem = document.getElementById('preview-audio-player');
                 if (previewElem) previewElem.pause();
                 document.getElementById('vinyl-disc').classList.remove('playing');
@@ -1467,6 +1482,21 @@
         let pendingVictory = false;
         let activeEditingPlaylistId = null;
         let editorSearchResultsCache = [];
+
+        // Gestion du mode audio (tv ou ipad)
+        let audioMode = localStorage.getItem('blindtest_audio_mode') || 'tv';
+
+        window.setAudioMode = function(mode) {
+            audioMode = mode;
+            localStorage.setItem('blindtest_audio_mode', mode);
+            if (mode === 'tv') {
+                document.getElementById('btn-audio-tv').classList.add('active');
+                document.getElementById('btn-audio-ipad').classList.remove('active');
+            } else {
+                document.getElementById('btn-audio-ipad').classList.add('active');
+                document.getElementById('btn-audio-tv').classList.remove('active');
+            }
+        };
 
         const defaultFavorites = ["variete francaise", "annees 80", "rock", "disney", "hits 2024"];
         
@@ -2014,6 +2044,7 @@
             renderFavorites();
             renderCustomPlaylists();
             fetchItunesPlaylist();
+            setAudioMode(audioMode);
         });
 
         window.resetGameKeepPlayers = function() {
@@ -2108,6 +2139,29 @@
             playedIndices.push(randomIndex);
             const track = dynamicPlaylist[randomIndex];
 
+            const audioElem = document.getElementById('audio-player');
+
+            // Si le mode audio est sur l'iPad, on lit le son directement sur l'iPad
+            if (audioMode === 'ipad') {
+                audioElem.src = track.audioUrl;
+                audioElem.volume = 0;
+                audioElem.play().catch(() => {});
+
+                let fadeVol = 0;
+                const fadeInInterval = setInterval(() => {
+                    fadeVol += 0.15;
+                    if (fadeVol >= 1) {
+                        fadeVol = 1;
+                        audioElem.volume = 1;
+                        clearInterval(fadeInInterval);
+                    } else {
+                        audioElem.volume = fadeVol;
+                    }
+                }, 80);
+            } else {
+                if (audioElem) audioElem.pause();
+            }
+
             document.getElementById('qr-container').classList.add('minimized');
             document.getElementById('reveal-container-box').classList.remove('visible');
             document.getElementById('reveal-label').textContent = "";
@@ -2132,16 +2186,22 @@
                         }
                     });
 
-                    // On transmet toutes les infos + l'URL audio à la télé pour qu'elle joue la musique
-                    window.dbSet(window.dbRef(window.dbInstance, 'gameState'), {
+                    // On prépare l'objet à envoyer à Firebase
+                    let gameStatePayload = {
                         status: 'playing',
                         choices: track.choices,
                         trackIndex: randomIndex,
                         trackName: track.trackName,
                         artistName: track.artistName,
-                        audioUrl: track.audioUrl,
                         roundId: Date.now()
-                    });
+                    };
+
+                    // Si on est en mode TV, on transmet l'URL audio pour que la télé la joue
+                    if (audioMode === 'tv') {
+                        gameStatePayload.audioUrl = track.audioUrl;
+                    }
+
+                    window.dbSet(window.dbRef(window.dbInstance, 'gameState'), gameStatePayload);
                 }
             }, 300);
 
@@ -2160,6 +2220,14 @@
                 const elapsed = Date.now() - startTime;
                 const remainingMs = duration - elapsed;
                 const remaining = Math.max(0, Math.ceil(remainingMs / 1000));
+                
+                if (audioMode === 'ipad') {
+                    if (remainingMs <= 1500 && remainingMs > 0) {
+                        audioElem.volume = 0.4 + (remainingMs / 1500) * 0.6;
+                    } else if (remainingMs <= 0) {
+                        audioElem.volume = 0.4;
+                    }
+                }
 
                 if (remaining !== musicTimeLeft) {
                     musicTimeLeft = remaining;
