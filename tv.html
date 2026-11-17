@@ -24,6 +24,54 @@
             flex-direction: column;
         }
 
+        /* Overlay pour débloquer l'audio sur la TV au premier clic */
+        #audio-unlock-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(11, 15, 25, 0.95);
+            backdrop-filter: blur(10px);
+            z-index: 99999;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 20px;
+            cursor: pointer;
+            text-align: center;
+            padding: 20px;
+        }
+
+        #audio-unlock-overlay h2 {
+            font-size: 2.5rem;
+            color: #ff007f;
+            text-shadow: 0 0 20px rgba(255, 0, 127, 0.5);
+        }
+
+        #audio-unlock-overlay p {
+            font-size: 1.2rem;
+            color: #a0aec0;
+        }
+
+        .unlock-btn {
+            background: linear-gradient(45deg, #ff007f, #7928ca);
+            color: white;
+            border: none;
+            padding: 16px 32px;
+            border-radius: 14px;
+            font-size: 1.3rem;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 10px 30px rgba(121, 40, 202, 0.5);
+            transition: transform 0.2s;
+        }
+
+        .unlock-btn:hover {
+            transform: scale(1.05);
+        }
+
         #exit-tv-btn {
             position: fixed;
             top: 15px;
@@ -334,6 +382,13 @@
 </head>
 <body>
 
+    <!-- Overlay de déblocage audio -->
+    <div id="audio-unlock-overlay" onclick="unlockAndStart()">
+        <h2>🔊 Prêt pour le Blind Test ?</h2>
+        <p>Clique ici pour activer le son et autoriser la lecture sur la télévision</p>
+        <button class="unlock-btn">Activer le son de la TV</button>
+    </div>
+
     <button id="exit-tv-btn" onclick="window.location.href='index.html'">← Retour Admin</button>
 
     <main>
@@ -372,7 +427,6 @@
         </div>
     </main>
 
-    <!-- Lecteur Audio HTML5 hébergé directement sur la Télévision -->
     <audio id="tv-audio-player" preload="auto"></audio>
 
     <script type="module">
@@ -397,7 +451,17 @@
         let currentRoundId = null;
         let tvFadeInterval = null;
 
-        // Synchronisation de l'état du jeu (Musique, Timer, vinyle, révélation)
+        window.unlockAndStart = function() {
+            // Lecture d'un son vide/muet pour débloquer l'audio du navigateur TV
+            audioElem.play().then(() => {
+                audioElem.pause();
+                document.getElementById('audio-unlock-overlay').style.display = 'none';
+            }).catch(err => {
+                console.log("Erreur déblocage audio:", err);
+                document.getElementById('audio-unlock-overlay').style.display = 'none';
+            });
+        };
+
         const gameStateRef = ref(db, 'gameState');
         onValue(gameStateRef, (snapshot) => {
             const state = snapshot.val();
@@ -415,14 +479,15 @@
                 statusLabel.textContent = "Extrait en cours...";
                 counter.textContent = state.timeLeft !== undefined ? state.timeLeft : 15;
 
-                // Si un nouveau tour commence, on lance la musique sur la télé avec fade-in
                 if (state.roundId && state.roundId !== currentRoundId && state.audioUrl) {
                     currentRoundId = state.roundId;
                     if (tvFadeInterval) clearInterval(tvFadeInterval);
 
                     audioElem.src = state.audioUrl;
                     audioElem.volume = 0;
-                    audioElem.play().catch(() => {});
+                    audioElem.play().catch((e) => {
+                        console.log("Lecture bloquée, clique d'abord sur l'overlay TV", e);
+                    });
 
                     let fadeVol = 0;
                     tvFadeInterval = setInterval(() => {
@@ -437,7 +502,6 @@
                     }, 80);
                 }
 
-                // Gestion du fade-out vers 40% sur les 1.5 dernières secondes (basé sur le timeLeft de l'admin)
                 if (state.timeLeft <= 1.5 && audioElem.volume > 0.4) {
                     audioElem.volume = 0.4;
                 }
@@ -458,7 +522,6 @@
             }
         });
 
-        // Synchronisation en temps réel des joueurs et du classement
         const playersRef = ref(db, 'players');
         onValue(playersRef, (snapshot) => {
             const data = snapshot.val();
