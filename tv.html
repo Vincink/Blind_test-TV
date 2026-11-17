@@ -24,52 +24,53 @@
             flex-direction: column;
         }
 
-        /* Overlay pour débloquer l'audio sur la TV au premier clic */
+        /* Overlay TV optimisé pour la télécommande */
         #audio-unlock-overlay {
             position: fixed;
             top: 0;
             left: 0;
             width: 100vw;
             height: 100vh;
-            background: rgba(11, 15, 25, 0.95);
-            backdrop-filter: blur(10px);
+            background: rgba(11, 15, 25, 0.98);
             z-index: 99999;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            gap: 20px;
-            cursor: pointer;
+            gap: 25px;
             text-align: center;
-            padding: 20px;
+            padding: 30px;
         }
 
         #audio-unlock-overlay h2 {
-            font-size: 2.5rem;
+            font-size: 3rem;
             color: #ff007f;
             text-shadow: 0 0 20px rgba(255, 0, 127, 0.5);
         }
 
         #audio-unlock-overlay p {
-            font-size: 1.2rem;
+            font-size: 1.4rem;
             color: #a0aec0;
         }
 
         .unlock-btn {
             background: linear-gradient(45deg, #ff007f, #7928ca);
             color: white;
-            border: none;
-            padding: 16px 32px;
-            border-radius: 14px;
-            font-size: 1.3rem;
+            border: 3px solid #fff;
+            padding: 20px 40px;
+            border-radius: 16px;
+            font-size: 1.6rem;
             font-weight: bold;
             cursor: pointer;
-            box-shadow: 0 10px 30px rgba(121, 40, 202, 0.5);
-            transition: transform 0.2s;
+            box-shadow: 0 10px 30px rgba(121, 40, 202, 0.6);
+            transition: transform 0.2s, background 0.2s;
         }
 
-        .unlock-btn:hover {
-            transform: scale(1.05);
+        .unlock-btn:focus, .unlock-btn:hover {
+            transform: scale(1.08);
+            border-color: #ff007f;
+            background: linear-gradient(45deg, #ff1493, #8a2be2);
+            outline: none;
         }
 
         #exit-tv-btn {
@@ -382,11 +383,11 @@
 </head>
 <body>
 
-    <!-- Overlay de déblocage audio -->
-    <div id="audio-unlock-overlay" onclick="unlockAndStart()">
+    <!-- Overlay avec un vrai bouton focusable par la télécommande -->
+    <div id="audio-unlock-overlay">
         <h2>🔊 Prêt pour le Blind Test ?</h2>
-        <p>Clique ici pour activer le son et autoriser la lecture sur la télévision</p>
-        <button class="unlock-btn">Activer le son de la TV</button>
+        <p>Clique sur le bouton ci-dessous pour activer le son</p>
+        <button class="unlock-btn" id="unlock-btn" autofocus onclick="unlockAndStart()">Activer le son de la TV</button>
     </div>
 
     <button id="exit-tv-btn" onclick="window.location.href='index.html'">← Retour Admin</button>
@@ -452,14 +453,9 @@
         let tvFadeInterval = null;
 
         window.unlockAndStart = function() {
-            // Lecture d'un son vide/muet pour débloquer l'audio du navigateur TV
-            audioElem.play().then(() => {
-                audioElem.pause();
-                document.getElementById('audio-unlock-overlay').style.display = 'none';
-            }).catch(err => {
-                console.log("Erreur déblocage audio:", err);
-                document.getElementById('audio-unlock-overlay').style.display = 'none';
-            });
+            // Masque l'overlay immédiatement
+            const overlay = document.getElementById('audio-unlock-overlay');
+            if (overlay) overlay.style.display = 'none';
         };
 
         const gameStateRef = ref(db, 'gameState');
@@ -486,7 +482,7 @@
                     audioElem.src = state.audioUrl;
                     audioElem.volume = 0;
                     audioElem.play().catch((e) => {
-                        console.log("Lecture bloquée, clique d'abord sur l'overlay TV", e);
+                        console.log("Lecture audio bloquée :", e);
                     });
 
                     let fadeVol = 0;
