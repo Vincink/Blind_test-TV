@@ -1,13 +1,12 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-        <!-- Icône pour l'écran d'accueil et signets (iOS / Android / Navigateur) -->
-    <link rel="icon" type="image/jpeg" href="icon.jpg">
-    <link rel="apple-touch-icon" href="icon.jpg">
+    <link rel="icon" type="image/jpeg" href="icon.jpeg">
+    <link rel="apple-touch-icon" href="icon.jpeg">
 
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Blind Test</title>
+    <title>Blind Test - Admin</title>
     <style>
         * {
             box-sizing: border-box;
@@ -46,7 +45,6 @@
             gap: 15px;
         }
 
-        /* Menu Burger Styling */
         .burger-container {
             position: relative;
         }
@@ -191,7 +189,6 @@
             margin-left: 4px;
         }
 
-        /* Playlists personnalisées dans le menu */
         .custom-playlists-container {
             display: flex;
             flex-direction: column;
@@ -307,7 +304,6 @@
             transition: opacity 0.2s ease;
         }
 
-        /* Modale générale au premier plan pour passer par-dessus l'éditeur */
         #custom-modal {
             z-index: 2000;
         }
@@ -333,7 +329,6 @@
             transition: transform 0.2s ease;
         }
 
-        /* Modale TRÈS grand format pour l'éditeur */
         .modal-card.wide-editor {
             width: 90vw;
             max-width: 1150px;
@@ -414,7 +409,6 @@
             background: #f56565;
         }
 
-        /* Éditeur grand format optimisé */
         .editor-container-flex {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -450,7 +444,6 @@
             padding-right: 6px;
         }
 
-        /* Lignes de morceaux spacieuses */
         .editor-track-row {
             background: rgba(25, 30, 45, 0.95);
             padding: 10px 14px;
@@ -516,7 +509,6 @@
             padding-right: 6px;
         }
 
-        /* Barre de recherche avec bouton croix intégré */
         .search-input-wrapper {
             position: relative;
             display: flex;
@@ -646,9 +638,8 @@
             position: relative;
         }
 
-        /* Stylisation et positionnement absolu de la révélation */
         .reveal-container {
-            display: none; /* Invisible et hors flux par défaut */
+            display: none;
             position: absolute;
             top: 15px;
             left: 50%;
@@ -989,7 +980,7 @@
 <body>
 
     <header>
-        <h1>Blind Test</h1>
+        <h1>Blind Test - Admin</h1>
         
         <div class="header-right">
             <!-- Menu Burger -->
@@ -1040,6 +1031,11 @@
 
                     <div class="menu-divider"></div>
 
+                    <!-- Lien vers la page TV dédiée -->
+                    <button class="menu-action-btn" style="background: #7928ca; border-color: #ff007f; text-align: center;" onclick="playClickSound(); window.open('tv.html', '_blank')">🖥️ Ouvrir la Page TV</button>
+
+                    <div class="menu-divider"></div>
+
                     <!-- Contrôles de partie -->
                     <button class="menu-action-btn" onclick="playClickSound(); confirmResetScores(); toggleBurgerMenu();">Remettre les scores à 0</button>
                     <button class="menu-action-btn" onclick="playClickSound(); confirmStopGame(); toggleBurgerMenu();">Arrêter la partie</button>
@@ -1068,7 +1064,6 @@
             </div>
             
             <div class="editor-container-flex">
-                <!-- Colonne de gauche : Morceaux enregistrés avec barre de recherche/filtre -->
                 <div class="editor-column">
                     <label>Morceaux de la playlist :</label>
                     <div class="search-input-wrapper" style="margin-bottom: 4px;">
@@ -1078,7 +1073,6 @@
                     <div class="editor-tracks-container" id="editor-tracks-list"></div>
                 </div>
 
-                <!-- Colonne de droite : Recherche et ajout grand format -->
                 <div class="editor-column">
                     <label>Rechercher par Artiste, Titre ou Album :</label>
                     <div style="display: flex; gap: 8px; align-items: center;">
@@ -1111,7 +1105,6 @@
         </div>
 
         <div class="center-zone">
-            <!-- Conteneur de révélation -->
             <div class="reveal-container" id="reveal-container-box">
                 <div class="reveal-label" id="reveal-label"></div>
                 <div class="track-info-preview" id="track-info-preview"></div>
@@ -1130,9 +1123,7 @@
                 </div>
             </div>
 
-            <!-- Lecteur Audio HTML5 pour l'API iTunes -->
             <audio id="audio-player" preload="auto"></audio>
-            <!-- Lecteur Audio dédié pour la préécoute dans l'éditeur -->
             <audio id="preview-audio-player" preload="none"></audio>
         </div>
 
@@ -1143,10 +1134,7 @@
             </div>
             
             <div class="players-container">
-                <!-- Top 3 épinglé en haut -->
                 <div class="top-three-list" id="top-three-container"></div>
-
-                <!-- Reste de la liste avec défilement fluide automatique -->
                 <div class="scrollable-players-wrapper" id="scroll-wrapper" style="display: none;">
                     <div class="scrollable-players-inner" id="scrollable-container"></div>
                 </div>
@@ -1154,7 +1142,6 @@
         </div>
     </main>
 
-    <!-- Bouton d'action unique décalé à droite -->
     <button class="bottom-action-btn" id="start-btn" onclick="playClickSound(); startNextRound()">
         <span id="start-btn-text">Démarrer la partie</span>
     </button>
@@ -1470,7 +1457,6 @@
         };
     </script>
 
-    <!-- FontAwesome pour la poubelle et les icônes -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
     <script>
@@ -1561,7 +1547,6 @@
             saveFavorites(favs);
         };
 
-        /* --- GESTION DES PLAYLISTS PERSONNALISÉES & ÉDITION VISUELLE --- */
         function getCustomPlaylists() {
             let saved = localStorage.getItem('blindtest_custom_playlists');
             return saved ? JSON.parse(saved) : [];
@@ -1981,7 +1966,6 @@
                 }
             }
         };
-        /* -------------------------------------------------------------------- */
 
         async function fetchItunesPlaylist() {
             const query = document.getElementById('itunes-query').value || "variete francaise";
@@ -2170,7 +2154,9 @@
                     window.dbSet(window.dbRef(window.dbInstance, 'gameState'), {
                         status: 'playing',
                         choices: track.choices,
-                        trackIndex: randomIndex
+                        trackIndex: randomIndex,
+                        trackName: track.trackName,
+                        artistName: track.artistName
                     });
                 }
             }, 300);
@@ -2192,9 +2178,9 @@
                 const remaining = Math.max(0, Math.ceil(remainingMs / 1000));
                 
                 if (remainingMs <= 1500 && remainingMs > 0) {
-                    audioElem.volume = Math.max(0, remainingMs / 1500);
+                    audioElem.volume = 0.4 + (remainingMs / 1500) * 0.6;
                 } else if (remainingMs <= 0) {
-                    audioElem.volume = 0;
+                    audioElem.volume = 0.4;
                 }
 
                 if (remaining !== musicTimeLeft) {
@@ -2240,10 +2226,11 @@
                     clearInterval(timerInterval);
                     roundActive = false;
                     window.roundActiveLoop = false;
-
-                    audioElem.pause();
-                    document.getElementById('vinyl-disc').classList.remove('playing');
                     
+                    if (window.dbInstance && window.dbRef) {
+                        window.dbUpdate(window.dbRef(window.dbInstance, 'gameState'), { status: 'reveal', trackName: track.trackName, artistName: track.artistName });
+                    }
+
                     if (pendingVictory) {
                         triggerVictorySequence();
                     } else {
