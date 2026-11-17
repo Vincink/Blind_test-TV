@@ -453,7 +453,18 @@
         let tvFadeInterval = null;
 
         window.unlockAndStart = function() {
-            // Masque l'overlay immédiatement
+            // Amorçage crucial du lecteur audio avec un flux silencieux pour déverrouiller la TV
+            audioElem.src = "data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQAAAAA=";
+            audioElem.volume = 0.01;
+            audioElem.play().then(() => {
+                audioElem.pause();
+                audioElem.currentTime = 0;
+                audioElem.volume = 1.0;
+            }).catch(err => {
+                console.log("Erreur amorçage audio TV :", err);
+            });
+
+            // Masque l'overlay
             const overlay = document.getElementById('audio-unlock-overlay');
             if (overlay) overlay.style.display = 'none';
         };
