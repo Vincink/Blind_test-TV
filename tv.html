@@ -509,8 +509,9 @@
                     }, 80);
                 }
 
-                if (state.timeLeft <= 1.5 && audioElem.volume > 0.4) {
-                    audioElem.volume = 0.4;
+                // Fade-out vers 60% sur les 1.5 dernières secondes
+                if (state.timeLeft <= 1.5 && audioElem.volume > 0.6) {
+                    audioElem.volume = 0.6;
                 }
 
             } else if (state.status === 'reveal') {
@@ -518,6 +519,13 @@
                 statusLabel.textContent = "";
                 counter.textContent = "";
                 trackPreview.textContent = `${state.artistName} - ${state.trackName}`;
+                revealBox.classList.add('visible');
+            } else if (state.status === 'victory') {
+                vinyl.classList.remove('playing');
+                audioElem.pause();
+                statusLabel.textContent = `Victoire éclatante de ${state.winnerName} !`;
+                counter.textContent = `${state.winnerScore} pts`;
+                trackPreview.textContent = `Fin de partie`;
                 revealBox.classList.add('visible');
             } else if (state.status === 'stopped') {
                 vinyl.classList.remove('playing');
