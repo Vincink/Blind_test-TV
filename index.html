@@ -2081,7 +2081,7 @@
         function triggerVictorySequence() {
             window.gameOverTriggered = true;
             
-            if (window.dbInstance && window.dbRef && window.dbGet) {
+            if (window.dbInstance && window.dbRef && window.dbGet && window.dbSet) {
                 window.dbGet(window.dbRef(window.dbInstance, 'players')).then((snapshot) => {
                     const data = snapshot.val();
                     if (data) {
@@ -2094,6 +2094,13 @@
                         const winner = playersArray[0];
                         document.getElementById('status-label').textContent = `Victoire éclatante de ${winner.name} !`;
                         document.getElementById('big-counter').textContent = `${winner.score} pts`;
+
+                        // Envoi de l'état de victoire à Firebase pour affichage sur tv.html
+                        window.dbSet(window.dbRef(window.dbInstance, 'gameState'), {
+                            status: 'victory',
+                            winnerName: winner.name,
+                            winnerScore: winner.score
+                        });
                     }
                 });
             }
@@ -2186,7 +2193,6 @@
                         }
                     });
 
-                    // On prépare l'objet à envoyer à Firebase
                     let gameStatePayload = {
                         status: 'playing',
                         choices: track.choices,
@@ -2196,7 +2202,6 @@
                         roundId: Date.now()
                     };
 
-                    // Si on est en mode TV, on transmet l'URL audio pour que la télé la joue
                     if (audioMode === 'tv') {
                         gameStatePayload.audioUrl = track.audioUrl;
                     }
@@ -2221,11 +2226,12 @@
                 const remainingMs = duration - elapsed;
                 const remaining = Math.max(0, Math.ceil(remainingMs / 1000));
                 
+                // Mode iPad : fade-out de 100% à 60% sur la fin
                 if (audioMode === 'ipad') {
                     if (remainingMs <= 1500 && remainingMs > 0) {
-                        audioElem.volume = 0.4 + (remainingMs / 1500) * 0.6;
+                        audioElem.volume = 0.6 + (remainingMs / 1500) * 0.4;
                     } else if (remainingMs <= 0) {
-                        audioElem.volume = 0.4;
+                        audioElem.volume = 0.6;
                     }
                 }
 
